@@ -50,7 +50,7 @@ jobs:
       # Secrets are set in GitHub repository Settings → Secrets and variables
       - name: Decode keystore
         if: ${{ env.KEYSTORE_BASE64 != '' }}
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/exitsa-release.keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/exitsa-release.keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
@@ -58,7 +58,7 @@ jobs:
         if: ${{ env.KEYSTORE_BASE64 == '' }}
         run: |
           keytool -genkeypair -v \
-            -keystore android/exitsa-release.keystore \
+            -keystore android/app/exitsa-release.keystore \
             -alias exitsa \
             -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass exitsa2025 -keypass exitsa2025 \
@@ -71,8 +71,9 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
+          KEYSTORE="$GITHUB_WORKSPACE/android/app/exitsa-release.keystore"
           ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=exitsa-release.keystore \
+            -Pandroid.injected.signing.store.file="$KEYSTORE" \
             -Pandroid.injected.signing.store.password=exitsa2025 \
             -Pandroid.injected.signing.key.alias=exitsa \
             -Pandroid.injected.signing.key.password=exitsa2025
