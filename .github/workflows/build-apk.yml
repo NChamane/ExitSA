@@ -1,0 +1,131 @@
+name: Build ExitSA APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Node.js ───────────────────────────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Copy web assets to www/ ────────────────────────────────────────────
+      - name: Build web assets
+        run: npm run build
+
+      # ── Java ──────────────────────────────────────────────────────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ── Android SDK ───────────────────────────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ── Capacitor sync ────────────────────────────────────────────────────
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # ── Keystore ──────────────────────────────────────────────────────────
+      # Secrets are set in GitHub repository Settings → Secrets and variables
+      - name: Decode keystore
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/exitsa-release.keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Generate debug keystore (if no release keystore)
+        if: ${{ env.KEYSTORE_BASE64 == '' }}
+        run: |
+          keytool -genkeypair -v \
+            -keystore android/exitsa-release.keystore \
+            -alias exitsa \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass exitsa2025 -keypass exitsa2025 \
+            -dname "CN=ExitSA, OU=Mobile, O=ExitSA, L=Johannesburg, ST=Gauteng, C=ZA"
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      # ── Build release APK ─────────────────────────────────────────────────
+      - name: Build release APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=exitsa-release.keystore \
+            -Pandroid.injected.signing.store.password=exitsa2025 \
+            -Pandroid.injected.signing.key.alias=exitsa \
+            -Pandroid.injected.signing.key.password=exitsa2025
+
+      # ── Rename and copy APK ───────────────────────────────────────────────
+      - name: Prepare APK for download
+        run: |
+          APK_PATH=$(find android -name "*.apk" | head -1)
+          cp "$APK_PATH" downloads/ExitSA.apk
+          ls -lh downloads/
+
+      # ── Upload APK as build artifact ──────────────────────────────────────
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExitSA-APK
+          path: downloads/ExitSA.apk
+          retention-days: 30
+
+      # ── Create GitHub Release on main branch ──────────────────────────────
+      - name: Get version
+        id: version
+        run: echo "tag=v$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ExitSA ${{ steps.version.outputs.tag }}
+          body: |
+            ## ExitSA Android APK
+
+            Download and install **ExitSA** on your Android device.
+
+            ### What's included
+            - 25 preset routes across all 5 provinces
+            - Live GPS off-ramp warnings (3 km, 1 km, 500 m, 200 m)
+            - AR camera lane overlay
+            - Smartwatch haptic alerts
+            - Community tip submission
+            - Full offline support
+
+            ### How to install
+            1. Download `ExitSA.apk` below
+            2. Open the file on your Android phone
+            3. Tap **Install** (allow "Install from unknown sources" if prompted)
+            4. Open ExitSA and start briefing your route
+
+            > **Note:** This APK is signed with a self-generated certificate.
+            > For Play Store distribution, replace the keystore via GitHub Secrets.
+          files: downloads/ExitSA.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

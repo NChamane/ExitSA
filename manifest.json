@@ -1,0 +1,42 @@
+{
+  "name": "ExitSA — Know Your Route Before You Drive",
+  "short_name": "ExitSA",
+  "description": "Off-ramp warnings for South African drivers. 25 preset routes across Gauteng, KZN, Western Cape, Free State and Eastern Cape. Live GPS warnings, AR camera, haptic watch alerts, and community tips. Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait-primary",
+  "categories": ["navigation", "travel"],
+  "lang": "en-ZA",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Sandton → OR Tambo",
+      "short_name": "JHB Airport",
+      "description": "Brief the Sandton to OR Tambo route",
+      "url": "./index.html?route=sandton-ortambo"
+    },
+    {
+      "name": "Cape Town → Airport",
+      "short_name": "CPT Airport",
+      "description": "Brief the Cape Town CBD to airport route",
+      "url": "./index.html?route=cpt-airport"
+    }
+  ]
+}

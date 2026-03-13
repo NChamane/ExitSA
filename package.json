@@ -1,0 +1,21 @@
+{
+  "name": "exitsa",
+  "version": "1.0.0",
+  "description": "ExitSA — Off-ramp warnings for South African drivers",
+  "main": "sw.js",
+  "scripts": {
+    "build": "cp index.html sw.js manifest.json icon.svg www/",
+    "sync": "npm run build && npx cap sync android",
+    "apk:debug": "npm run sync && cd android && ./gradlew assembleDebug",
+    "apk:release": "npm run sync && cd android && ./gradlew assembleRelease",
+    "open:android": "npx cap open android"
+  },
+  "keywords": ["navigation", "south-africa", "pwa", "offline"],
+  "author": "ExitSA",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0"
+  }
+}

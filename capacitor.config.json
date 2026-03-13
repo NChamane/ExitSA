@@ -1,0 +1,29 @@
+{
+  "appId": "za.co.exitsa.app",
+  "appName": "ExitSA",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "exitsa-release.keystore",
+      "keystorePassword": "exitsa2025",
+      "keystoreAlias": "exitsa",
+      "keystoreAliasPassword": "exitsa2025",
+      "releaseType": "APK"
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#FF6B35",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#FF6B35"
+    }
+  }
+}

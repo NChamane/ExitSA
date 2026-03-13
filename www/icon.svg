@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#FF6B35"/>
+  <!-- Road (perspective trapezoid) -->
+  <polygon points="182,460 330,460 355,120 157,120" fill="#C1440E"/>
+  <!-- Lane dashes -->
+  <rect x="248" y="140" width="16" height="55" rx="8" fill="#FFF8F0" opacity="0.6"/>
+  <rect x="248" y="230" width="16" height="55" rx="8" fill="#FFF8F0" opacity="0.6"/>
+  <rect x="248" y="320" width="16" height="55" rx="8" fill="#FFF8F0" opacity="0.6"/>
+  <!-- Off-ramp arrow pointing left-up -->
+  <path d="M330 200 L420 200 L420 160 L460 220 L420 280 L420 240 L310 240 L310 380 L260 380 L260 200 Z" fill="#FFF8F0"/>
+</svg>

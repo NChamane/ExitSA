@@ -1,0 +1,3131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExitSA — Know Your Route Before You Drive</title>
+
+  <!-- PWA / installability -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#FF6B35" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ExitSA" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+</head>
+<body style="margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #FFF8F0; color: #3D1A00;">
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- OFFLINE BANNER (fixed, always on top)   -->
+  <!-- ═══════════════════════════════════════ -->
+  <div
+    id="offline-banner"
+    style="display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 999; background-color: #C1440E; color: #FFF8F0; padding: 10px 16px; text-align: center; font-size: 13px; font-weight: 600; line-height: 1.4;"
+  >
+    You're offline &mdash; all 25 preset routes still work. Custom routes need internet.
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: HOME                            -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-home" style="min-height: 100vh; background-color: #FFF8F0;">
+
+    <!-- Hero header -->
+    <div style="background-color: #FF6B35; padding: 40px 20px 28px; text-align: center;">
+      <div style="font-size: 2.6rem; font-weight: 900; color: #FFF8F0; letter-spacing: -1.5px; margin-bottom: 6px;">
+        ExitSA
+      </div>
+      <div style="font-size: 1rem; color: #FAE8D3; font-weight: 400; line-height: 1.5;">
+        Know your route before you drive.<br/>No more missed off-ramps.
+      </div>
+    </div>
+
+    <!-- Search form -->
+    <div style="padding: 28px 20px; max-width: 480px; margin: 0 auto; box-sizing: border-box;">
+
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: #C1440E; margin: 0 0 18px;">
+        Where are you headed today?
+      </h2>
+
+      <!-- From input -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #A0522D; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.6px;">
+          From
+        </label>
+        <input
+          id="input-from"
+          type="text"
+          placeholder="Any city, town or village in South Africa"
+          style="background-color: #FAE8D3; border: 2px solid #F7931E; border-radius: 8px; padding: 14px 16px; font-size: 16px; color: #3D1A00; width: 100%; box-sizing: border-box; outline: none; font-family: inherit;"
+        />
+      </div>
+
+      <!-- To input -->
+      <div style="margin-bottom: 22px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #A0522D; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.6px;">
+          To
+        </label>
+        <input
+          id="input-to"
+          type="text"
+          placeholder="Any destination — city, rural area or landmark"
+          style="background-color: #FAE8D3; border: 2px solid #F7931E; border-radius: 8px; padding: 14px 16px; font-size: 16px; color: #3D1A00; width: 100%; box-sizing: border-box; outline: none; font-family: inherit;"
+        />
+      </div>
+
+      <!-- Use my location -->
+      <button
+        onclick="useMyLocation()"
+        style="background-color: #FAE8D3; color: #A0522D; padding: 10px 16px; border: 2px solid #F7931E; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; display: block; margin-bottom: 12px; font-family: inherit;"
+      >
+        &#x1F4CD; Use my current location as starting point
+      </button>
+
+      <!-- CTA -->
+      <button
+        onclick="searchRoute()"
+        style="background-color: #FF6B35; color: #FFF8F0; padding: 16px 28px; border: none; border-radius: 8px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; display: block; font-family: inherit; letter-spacing: 0.2px;"
+      >
+        Show me my route →
+      </button>
+      <p style="font-size: 12px; color: #A0522D; text-align: center; margin: 8px 0 0; line-height: 1.5;">
+        Works for any destination in SA — cities, townships, rural areas and inter-provincial trips
+      </p>
+
+      <!-- Divider -->
+      <div style="display: flex; align-items: center; gap: 12px; margin: 28px 0 16px;">
+        <div style="flex: 1; height: 1px; background-color: #FAE8D3;"></div>
+        <span style="font-size: 12px; color: #A0522D; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Browse routes</span>
+        <div style="flex: 1; height: 1px; background-color: #FAE8D3;"></div>
+      </div>
+
+    </div><!-- end search form padding -->
+
+    <!-- Province tabs — full bleed horizontal scroll -->
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 16px; white-space: nowrap; max-width: 480px; margin: 0 auto; box-sizing: border-box;">
+      <div style="display: inline-flex; gap: 8px;">
+        <button id="tab-all"          onclick="setProvince('all')"          style="background-color:#FF6B35; color:#FFF8F0; border:2px solid #FF6B35; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; min-height:40px;">All</button>
+        <button id="tab-gauteng"      onclick="setProvince('gauteng')"      style="background-color:#FAE8D3; color:#3D1A00; border:2px solid #F7931E; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; min-height:40px;">Gauteng</button>
+        <button id="tab-kzn"          onclick="setProvince('kzn')"          style="background-color:#FAE8D3; color:#3D1A00; border:2px solid #F7931E; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; min-height:40px;">KwaZulu-Natal</button>
+        <button id="tab-free-state"   onclick="setProvince('free-state')"   style="background-color:#FAE8D3; color:#3D1A00; border:2px solid #F7931E; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; min-height:40px;">Free State</button>
+        <button id="tab-western-cape" onclick="setProvince('western-cape')" style="background-color:#FAE8D3; color:#3D1A00; border:2px solid #F7931E; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; min-height:40px;">Western Cape</button>
+        <button id="tab-eastern-cape" onclick="setProvince('eastern-cape')" style="background-color:#FAE8D3; color:#3D1A00; border:2px solid #F7931E; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; min-height:40px;">Eastern Cape</button>
+      </div>
+    </div>
+
+    <!-- Dynamic route list -->
+    <div id="route-list" style="padding: 0 20px 32px; max-width: 480px; margin: 0 auto; box-sizing: border-box;"></div>
+
+    <!-- Install prompt (shown by JS when applicable) -->
+    <div id="install-banner" style="display: none; background-color: #FAE8D3; border-radius: 12px; padding: 16px 18px; margin: 0 20px 20px; border: 2px solid #F7931E;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+        <div style="flex: 1;">
+          <div style="font-size: 14px; font-weight: 700; color: #C1440E; margin-bottom: 4px;">&#128247; Install ExitSA on your phone</div>
+          <div id="install-instructions" style="font-size: 13px; color: #A0522D; line-height: 1.5; margin-bottom: 12px;"></div>
+          <button id="install-btn" onclick="installApp()" style="display: none; background-color: #FF6B35; color: #FFF8F0; border: none; border-radius: 7px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;">Add to Home Screen</button>
+        </div>
+        <button onclick="dismissInstall()" style="background: none; border: none; color: #A0522D; font-size: 18px; cursor: pointer; padding: 0; flex-shrink: 0; line-height: 1;">&#10005;</button>
+      </div>
+    </div>
+
+    <p style="font-size: 13px; color: #A0522D; text-align: center; margin: 0 0 32px; line-height: 1.6; padding: 0 20px;">
+      Built by South African drivers, for South African drivers.<br/>
+      More routes added regularly.
+    </p>
+
+    <div style="display: none;"><!-- close search form padding placeholder -->
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: LOADING                         -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-loading" style="display: none; min-height: 100vh; background-color: #FFF8F0; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; box-sizing: border-box;">
+
+    <div
+      id="spinner"
+      style="width: 64px; height: 64px; border: 5px solid #FAE8D3; border-top-color: #FF6B35; border-radius: 50%; margin-bottom: 32px;"
+    ></div>
+
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: #C1440E; margin: 0 0 12px;">
+      Getting your route ready...
+    </h2>
+    <p id="loading-msg" style="font-size: 1rem; color: #A0522D; margin: 0; line-height: 1.6; max-width: 280px;">
+      Scanning Joburg's roads...
+    </p>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: OVERVIEW                        -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-overview" style="display: none; min-height: 100vh; background-color: #FFF8F0;">
+
+    <!-- Header -->
+    <div style="background-color: #FF6B35; padding: 20px 20px 24px; position: relative;">
+      <button
+        onclick="showScreen('home')"
+        style="position: absolute; top: 16px; left: 16px; background: rgba(255,248,240,0.2); border: none; color: #FFF8F0; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 12px; border-radius: 6px; font-family: inherit;"
+      >
+        ← Back
+      </button>
+      <div style="text-align: center; padding-top: 8px;">
+        <div id="ov-route-label" style="font-size: 1.2rem; font-weight: 800; color: #FFF8F0; margin-bottom: 4px;"></div>
+        <div id="ov-route-meta" style="font-size: 0.9rem; color: #FAE8D3;"></div>
+      </div>
+
+      <!-- Stats row -->
+      <div id="ov-stats" style="display: flex; gap: 10px; margin-top: 20px;"></div>
+
+      <!-- Road tags -->
+      <div id="ov-roads" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;"></div>
+    </div>
+
+    <!-- Content -->
+    <div style="padding: 24px 20px; max-width: 480px; margin: 0 auto; box-sizing: border-box;">
+
+      <h2 style="font-size: 1.1rem; font-weight: 700; color: #C1440E; margin: 0 0 6px;">
+        Here's what to watch for
+      </h2>
+      <p id="ov-critical-note" style="font-size: 14px; color: #A0522D; margin: 0 0 16px; line-height: 1.5;"></p>
+
+      <!-- Steps list -->
+      <div id="ov-steps" style="margin-bottom: 28px;"></div>
+
+      <!-- CTA -->
+      <button
+        onclick="startBriefing()"
+        style="background-color: #FF6B35; color: #FFF8F0; padding: 16px 28px; border: none; border-radius: 8px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; display: block; margin-bottom: 12px; font-family: inherit;"
+      >
+        Start step-by-step briefing →
+      </button>
+      <p style="font-size: 13px; color: #A0522D; text-align: center; margin: 0 0 14px; line-height: 1.5;">
+        Takes about 2 minutes — then you're ready to go
+      </p>
+      <button
+        onclick="prepareDriveMode(currentRouteId)"
+        style="background-color: #C1440E; color: #FFF8F0; padding: 14px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; display: block; font-family: inherit;"
+      >
+        &#9654; Skip briefing — Start Drive Mode now
+      </button>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: BRIEFING                        -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-briefing" style="display: none; min-height: 100vh; background-color: #FFF8F0;">
+
+    <!-- Top bar -->
+    <div style="background-color: #FAE8D3; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #F7931E; position: sticky; top: 0; z-index: 10;">
+      <button
+        onclick="showScreen('overview')"
+        style="background: none; border: none; color: #A0522D; font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 0; font-family: inherit; min-height: 44px;"
+      >
+        ← Overview
+      </button>
+      <span id="step-counter" style="font-size: 14px; font-weight: 800; color: #C1440E;"></span>
+      <button
+        onclick="finishBriefing()"
+        style="background: none; border: none; color: #A0522D; font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 0; font-family: inherit; min-height: 44px;"
+      >
+        Skip →
+      </button>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="height: 5px; background-color: #FAE8D3;">
+      <div id="progress-bar" style="height: 100%; background-color: #FF6B35; transition: width 0.35s ease;"></div>
+    </div>
+
+    <!-- Step content -->
+    <div id="slide-content" style="padding-bottom: 100px;"></div>
+
+    <!-- Bottom nav (fixed) -->
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; background-color: #FFF8F0; border-top: 2px solid #FAE8D3; padding: 12px 20px; display: flex; gap: 12px; box-sizing: border-box; max-width: 480px; margin: 0 auto;">
+      <button
+        id="btn-prev"
+        onclick="prevStep()"
+        style="flex: 1; background-color: #FAE8D3; color: #3D1A00; padding: 14px; border: 2px solid #F7931E; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 48px;"
+      >
+        ← Prev
+      </button>
+      <button
+        id="btn-next"
+        onclick="nextStep()"
+        style="flex: 2; background-color: #FF6B35; color: #FFF8F0; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; min-height: 48px;"
+      >
+        Next step →
+      </button>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: COMPLETE                        -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-complete" style="display: none; min-height: 100vh; background-color: #FFF8F0;">
+
+    <div style="padding: 48px 20px 40px; max-width: 480px; margin: 0 auto; text-align: center; box-sizing: border-box;">
+
+      <div style="font-size: 4.5rem; margin-bottom: 16px; line-height: 1;">&#127942;</div>
+
+      <h1 style="font-size: 1.9rem; font-weight: 900; color: #C1440E; margin: 0 0 14px; line-height: 1.2;">
+        You're ready to drive!
+      </h1>
+      <p style="font-size: 1rem; color: #A0522D; margin: 0 0 32px; line-height: 1.6;">
+        You've seen every exit and tricky interchange on your route. You know your lanes. Go crush it.
+      </p>
+
+      <!-- Route summary card -->
+      <div id="complete-summary" style="background-color: #FAE8D3; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: left;"></div>
+
+      <!-- Drive Mode CTA -->
+      <button
+        onclick="prepareDriveMode(currentRouteId)"
+        style="background-color: #C1440E; color: #FFF8F0; padding: 18px 28px; border: none; border-radius: 8px; font-size: 18px; font-weight: 900; cursor: pointer; width: 100%; display: block; margin-bottom: 12px; font-family: inherit; letter-spacing: 0.3px;"
+      >
+        &#9654; Start Drive Mode
+      </button>
+      <p style="font-size: 12px; color: #A0522D; text-align: center; margin: 0 0 20px; line-height: 1.5;">
+        Live GPS warnings at 3 km, 1 km, 500 m &amp; 200 m before each exit.<br/>Spoken lane guidance. Needs location access.
+      </p>
+
+      <!-- Actions -->
+      <button
+        onclick="restartRoute()"
+        style="background-color: #FAE8D3; color: #3D1A00; padding: 14px 28px; border: 2px solid #F7931E; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; display: block; margin-bottom: 12px; font-family: inherit;"
+      >
+        Review this route again
+      </button>
+      <button
+        onclick="showScreen('home')"
+        style="background-color: #FF6B35; color: #FFF8F0; padding: 16px 28px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; display: block; font-family: inherit;"
+      >
+        Brief another route
+      </button>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- JAVASCRIPT                              -->
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: DRIVE MODE                      -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-drive" style="display: none; min-height: 100vh; background-color: #2a0e00; color: #FFF8F0; font-family: system-ui, sans-serif;">
+
+    <!-- Top bar -->
+    <div style="background-color: #C1440E; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20;">
+      <div>
+        <div style="font-size: 11px; font-weight: 700; color: #FAE8D3; text-transform: uppercase; letter-spacing: 1px;">ExitSA Drive</div>
+        <div id="dm-route-label" style="font-size: 13px; font-weight: 600; color: #FFF8F0; margin-top: 1px;"></div>
+      </div>
+      <span id="dm-counter" style="font-size: 13px; font-weight: 700; color: #FAE8D3;"></span>
+      <button
+        onclick="stopDriveMode()"
+        style="background-color: #3D1A00; border: none; color: #FFF8F0; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; min-height: 44px;"
+      >
+        Stop
+      </button>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="height: 5px; background-color: #3D1A00;">
+      <div id="dm-progress" style="height: 100%; background-color: #FF6B35; transition: width 0.6s ease; width: 0%;"></div>
+    </div>
+
+    <!-- Warning banner (hidden by default) -->
+    <div id="dm-warning" style="display: none; padding: 14px 20px; text-align: center;">
+      <div id="dm-warning-text" style="font-size: 15px; font-weight: 800; color: #FFF8F0; line-height: 1.4;"></div>
+    </div>
+
+    <!-- GPS status (shown until first fix) -->
+    <div id="dm-gps-status" style="text-align: center; padding: 10px 20px; font-size: 13px; color: #A0522D;">
+      Acquiring GPS signal...
+    </div>
+
+    <!-- Main HUD -->
+    <div style="padding: 16px 20px 120px; max-width: 480px; margin: 0 auto; box-sizing: border-box;">
+
+      <!-- Next exit card -->
+      <div style="background-color: #3D1A00; border-radius: 12px; padding: 18px; margin-bottom: 14px; border: 2px solid #C1440E;">
+        <div style="font-size: 11px; font-weight: 700; color: #A0522D; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Next exit / manoeuvre</div>
+        <div id="dm-next-title" style="font-size: 1.05rem; font-weight: 800; color: #FFF8F0; line-height: 1.3; margin-bottom: 6px;"></div>
+        <div id="dm-next-instr" style="font-size: 0.85rem; color: #FAE8D3; line-height: 1.5;"></div>
+      </div>
+
+      <!-- Distance counter (BIG) -->
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div id="dm-distance" style="font-size: 4.5rem; font-weight: 900; color: #FF6B35; line-height: 1; letter-spacing: -2px;">--</div>
+        <div id="dm-dist-label" style="font-size: 13px; color: #A0522D; font-weight: 600; margin-top: 4px;">to next exit</div>
+      </div>
+
+      <!-- Lane guide -->
+      <div style="background-color: #3D1A00; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
+        <div style="font-size: 12px; font-weight: 700; color: #A0522D; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; text-align: center;">Get into this lane now</div>
+        <div id="dm-lanes" style="display: flex; gap: 7px; margin-bottom: 8px;"></div>
+        <div id="dm-lane-label" style="font-size: 13px; color: #A0522D; text-align: center;"></div>
+      </div>
+
+      <!-- Landmark -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background-color: #3D1A00; border-radius: 8px; margin-bottom: 14px; border-left: 4px solid #F7931E;">
+        <span style="font-size: 1.1rem; flex-shrink: 0;">&#128205;</span>
+        <span id="dm-landmark" style="font-size: 13px; color: #FAE8D3; font-weight: 500; line-height: 1.4;"></span>
+      </div>
+
+      <!-- Speed + next step manual advance -->
+      <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+        <div style="flex: 1; background-color: #3D1A00; border-radius: 8px; padding: 14px; text-align: center;">
+          <div id="dm-speed" style="font-size: 2rem; font-weight: 900; color: #FF6B35; line-height: 1;">--</div>
+          <div style="font-size: 12px; color: #A0522D; margin-top: 3px;">km/h</div>
+        </div>
+        <div style="flex: 2; background-color: #3D1A00; border-radius: 8px; padding: 14px; display: flex; align-items: center; justify-content: center;">
+          <button
+            onclick="driveStepIdx = Math.min(driveStepIdx + 1, ROUTES[driveRouteId].steps.length - 1); renderDriveHUD(ROUTES[driveRouteId].steps[driveStepIdx], driveStepIdx, ROUTES[driveRouteId].steps.length);"
+            style="background-color: #FF6B35; color: #FFF8F0; border: none; border-radius: 7px; padding: 12px 20px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%;"
+          >
+            Next step &#8594;
+          </button>
+        </div>
+      </div>
+
+      <!-- AR View toggle -->
+      <button
+        onclick="switchToARView()"
+        style="background-color: #FF6B35; color: #FFF8F0; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; font-family: inherit; min-height: 48px; margin-bottom: 10px;"
+      >
+        &#128247; Switch to AR Camera View
+      </button>
+
+      <!-- Audio + Haptics row -->
+      <div style="display: flex; gap: 10px;">
+        <button
+          id="dm-mute-btn"
+          onclick="toggleMute()"
+          style="flex: 1; background-color: #3D1A00; color: #FAE8D3; padding: 14px; border: 2px solid #FF6B35; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 48px;"
+        >
+          &#128266; Audio ON
+        </button>
+        <button
+          id="dm-haptic-btn"
+          onclick="showHapticPanel()"
+          style="flex: 1; background-color: #3D1A00; color: #FAE8D3; padding: 14px; border: 2px solid #FF6B35; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 48px;"
+        >
+          &#8987; Haptics ON
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: AR CAMERA VIEW                  -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-ar" style="display: none; position: fixed; inset: 0; background: #000; overflow: hidden; z-index: 100;">
+
+    <!-- Live camera feed -->
+    <video
+      id="ar-video"
+      autoplay
+      playsinline
+      muted
+      style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"
+    ></video>
+
+    <!-- AR overlay canvas (drawn on top of camera) -->
+    <canvas
+      id="ar-canvas"
+      style="position: absolute; inset: 0; width: 100%; height: 100%;"
+    ></canvas>
+
+    <!-- Top HUD bar -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; background: rgba(42,14,0,0.78); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; backdrop-filter: blur(4px);">
+      <div>
+        <div style="font-size: 10px; font-weight: 700; color: #F7931E; text-transform: uppercase; letter-spacing: 1.2px;">ExitSA AR</div>
+        <div id="ar-route-label" style="font-size: 12px; font-weight: 600; color: #FFF8F0; margin-top: 1px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+      </div>
+      <span id="ar-counter" style="font-size: 13px; font-weight: 800; color: #FF6B35;"></span>
+      <div style="display: flex; gap: 8px;">
+        <button
+          onclick="switchToDriveHUD()"
+          style="background: rgba(255,107,53,0.25); border: 1.5px solid #FF6B35; color: #FFF8F0; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;"
+        >
+          HUD
+        </button>
+        <button
+          onclick="stopARMode()"
+          style="background: rgba(193,68,14,0.7); border: none; color: #FFF8F0; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;"
+        >
+          Stop
+        </button>
+      </div>
+    </div>
+
+    <!-- Warning flash banner -->
+    <div
+      id="ar-warning"
+      style="display: none; position: absolute; top: 72px; left: 16px; right: 16px; border-radius: 10px; padding: 12px 16px; text-align: center; z-index: 10;"
+    >
+      <div id="ar-warning-text" style="font-size: 15px; font-weight: 800; color: #FFF8F0; line-height: 1.4;"></div>
+    </div>
+
+    <!-- Camera permission error -->
+    <div
+      id="ar-cam-error"
+      style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(42,14,0,0.92); border-radius: 12px; padding: 28px 24px; text-align: center; max-width: 300px; z-index: 20;"
+    >
+      <div style="font-size: 2rem; margin-bottom: 12px;">&#128247;</div>
+      <div style="font-size: 15px; font-weight: 700; color: #FFF8F0; margin-bottom: 8px;">Camera access needed</div>
+      <div id="ar-cam-error-msg" style="font-size: 13px; color: #FAE8D3; margin-bottom: 16px; line-height: 1.5;"></div>
+      <button onclick="switchToDriveHUD()" style="background: #FF6B35; border: none; color: #FFF8F0; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%;">Back to HUD View</button>
+    </div>
+
+    <!-- Bottom info panel -->
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(42,14,0,0.82); padding: 14px 16px 20px; z-index: 10; backdrop-filter: blur(4px);">
+
+      <!-- Next exit info + distance -->
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 10px; font-weight: 700; color: #A0522D; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">Next exit</div>
+          <div id="ar-next-title" style="font-size: 14px; font-weight: 800; color: #FFF8F0; line-height: 1.3;"></div>
+          <div id="ar-landmark" style="font-size: 12px; color: #FAE8D3; margin-top: 3px; line-height: 1.4;"></div>
+        </div>
+        <div style="text-align: right; flex-shrink: 0;">
+          <div id="ar-distance" style="font-size: 2.2rem; font-weight: 900; color: #FF6B35; line-height: 1; letter-spacing: -1px;">--</div>
+          <div style="font-size: 11px; color: #A0522D; margin-top: 2px;">to exit</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div style="display: flex; gap: 8px;">
+        <button
+          id="ar-mute-btn"
+          onclick="toggleMuteAR()"
+          style="flex: 1; background: rgba(255,107,53,0.2); border: 1.5px solid #FF6B35; color: #FAE8D3; padding: 10px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 44px;"
+        >
+          &#128266; Audio ON
+        </button>
+        <button
+          onclick="showHapticPanel()"
+          style="flex: 1; background: rgba(255,107,53,0.2); border: 1.5px solid #FF6B35; color: #FAE8D3; padding: 10px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 44px;"
+        >
+          &#8987; Haptics
+        </button>
+        <button
+          onclick="driveStepIdx = Math.min(driveStepIdx+1, ROUTES[driveRouteId].steps.length-1); syncARHUD();"
+          style="flex: 2; background: rgba(255,107,53,0.3); border: 1.5px solid #FF6B35; color: #FFF8F0; padding: 10px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; min-height: 44px;"
+        >
+          Next &#8594;
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SCREEN: POST-DRIVE TIP SUBMISSION       -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-post-drive" style="display: none; min-height: 100vh; background-color: #FFF8F0; font-family: system-ui, sans-serif;">
+
+    <!-- Header -->
+    <div style="background-color: #FF6B35; padding: 32px 20px 24px; text-align: center;">
+      <div style="font-size: 2.8rem; margin-bottom: 10px; line-height: 1;">&#127881;</div>
+      <h1 style="font-size: 1.5rem; font-weight: 900; color: #FFF8F0; margin: 0 0 6px; line-height: 1.2;">You made it!</h1>
+      <p id="pd-route-label" style="font-size: 0.95rem; color: #FAE8D3; margin: 0; line-height: 1.5;"></p>
+    </div>
+
+    <!-- Body -->
+    <div style="padding: 24px 20px 120px; max-width: 480px; margin: 0 auto; box-sizing: border-box;">
+
+      <!-- Intro -->
+      <div style="background-color: #FAE8D3; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; border-left: 4px solid #FF6B35;">
+        <div style="font-size: 14px; font-weight: 700; color: #C1440E; margin-bottom: 4px;">Help the next driver</div>
+        <div style="font-size: 13px; color: #A0522D; line-height: 1.55;">Rate each exit and leave a tip if something surprised you. Your experience saves someone else from missing their off-ramp.</div>
+      </div>
+
+      <!-- Step rating cards (rendered by JS) -->
+      <div id="pd-steps"></div>
+
+      <!-- Nickname input -->
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #A0522D; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.6px;">Your name or nickname (optional)</label>
+        <input
+          id="pd-author"
+          type="text"
+          placeholder="e.g. Sipho M., a Joburg driver…"
+          style="background-color: #FAE8D3; border: 2px solid #F7931E; border-radius: 8px; padding: 12px 16px; font-size: 16px; color: #3D1A00; width: 100%; box-sizing: border-box; outline: none; font-family: inherit;"
+        />
+      </div>
+
+    </div>
+
+    <!-- Fixed bottom buttons -->
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #FFF8F0; border-top: 2px solid #FAE8D3; padding: 12px 20px; max-width: 480px; margin: 0 auto; box-sizing: border-box; display: flex; gap: 12px;">
+      <button
+        onclick="skipPostDrive()"
+        style="flex: 1; background: #FAE8D3; color: #A0522D; border: 2px solid #F7931E; border-radius: 8px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 48px;"
+      >
+        Skip
+      </button>
+      <button
+        onclick="submitCommunityTips()"
+        style="flex: 3; background: #FF6B35; color: #FFF8F0; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; min-height: 48px;"
+      >
+        Share my tips &#8594;
+      </button>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- HAPTIC SETTINGS PANEL (fixed overlay)   -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="haptic-panel" style="display: none; position: fixed; inset: 0; background: rgba(42,14,0,0.96); z-index: 300; overflow-y: auto; font-family: system-ui, sans-serif; color: #FFF8F0;">
+    <div style="max-width: 480px; margin: 0 auto; padding: 20px 20px 60px; box-sizing: border-box;">
+
+      <!-- Header -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-top: 8px;">
+        <div>
+          <div style="font-size: 1.4rem; font-weight: 900; color: #FFF8F0;">&#8987; Smartwatch Haptics</div>
+          <div style="font-size: 13px; color: #A0522D; margin-top: 3px;">Vibration warnings for your wrist</div>
+        </div>
+        <button onclick="hideHapticPanel()" style="background: #C1440E; border: none; color: #FFF8F0; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; min-height: 44px;">Done</button>
+      </div>
+
+      <!-- Master enable toggle -->
+      <div style="background: #3D1A00; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; border: 2px solid #C1440E;">
+        <div>
+          <div style="font-size: 15px; font-weight: 700; color: #FFF8F0; margin-bottom: 4px;">Haptic warnings</div>
+          <div style="font-size: 13px; color: #A0522D; line-height: 1.4;">Vibrate phone + paired watch<br/>at each distance threshold</div>
+        </div>
+        <button
+          id="haptic-toggle-btn"
+          onclick="toggleHaptics()"
+          style="background: #FF6B35; color: #FFF8F0; border: none; border-radius: 8px; padding: 12px 20px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; min-width: 64px;"
+        >ON</button>
+      </div>
+
+      <!-- Test button -->
+      <button
+        onclick="testHaptic()"
+        style="background: #FF6B35; color: #FFF8F0; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; font-family: inherit; margin-bottom: 14px;"
+      >
+        &#9654; Test all vibration patterns now
+      </button>
+
+      <!-- Vibration pattern legend -->
+      <div style="background: #3D1A00; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: #A0522D; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">What you'll feel</div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0;">3 km away</div>
+              <div style="font-size: 12px; color: #A0522D;">3 short pulses</div>
+            </div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <div style="width:10px; height:20px; background:#FF6B35; border-radius:3px;"></div>
+              <div style="width:10px; height:20px; background:#FF6B35; border-radius:3px;"></div>
+              <div style="width:10px; height:20px; background:#FF6B35; border-radius:3px;"></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0;">1 km away</div>
+              <div style="font-size: 12px; color: #A0522D;">2 medium pulses</div>
+            </div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <div style="width:16px; height:20px; background:#FF6B35; border-radius:3px;"></div>
+              <div style="width:16px; height:20px; background:#FF6B35; border-radius:3px;"></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0;">500 m away</div>
+              <div style="font-size: 12px; color: #A0522D;">1 strong pulse</div>
+            </div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <div style="width:28px; height:20px; background:#F7931E; border-radius:3px;"></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #C1440E;">200 m — EXIT NOW</div>
+              <div style="font-size: 12px; color: #A0522D;">Long pulse + 2 short</div>
+            </div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <div style="width:40px; height:20px; background:#C1440E; border-radius:3px;"></div>
+              <div style="width:14px; height:20px; background:#C1440E; border-radius:3px;"></div>
+              <div style="width:14px; height:20px; background:#C1440E; border-radius:3px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Watch type selector -->
+      <div style="font-size: 11px; font-weight: 700; color: #A0522D; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;">Your watch</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+        <button id="wt-apple"   onclick="setWatchType('apple')"   style="background:#3D1A00; border:2px solid #C1440E; color:#FFF8F0; padding:12px 6px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.4;">&#63743;<br/>Apple Watch</button>
+        <button id="wt-weaeros" onclick="setWatchType('weaeros')" style="background:#3D1A00; border:2px solid #F7931E; color:#FAE8D3; padding:12px 6px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.4;">&#9978;<br/>Wear OS</button>
+        <button id="wt-samsung" onclick="setWatchType('samsung')" style="background:#3D1A00; border:2px solid #F7931E; color:#FAE8D3; padding:12px 6px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.4;">&#128250;<br/>Samsung</button>
+        <button id="wt-fitbit"  onclick="setWatchType('fitbit')"  style="background:#3D1A00; border:2px solid #F7931E; color:#FAE8D3; padding:12px 6px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.4;">&#10052;<br/>Fitbit</button>
+        <button id="wt-garmin"  onclick="setWatchType('garmin')"  style="background:#3D1A00; border:2px solid #F7931E; color:#FAE8D3; padding:12px 6px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.4;">&#128507;<br/>Garmin</button>
+        <button id="wt-other"   onclick="setWatchType('other')"   style="background:#3D1A00; border:2px solid #F7931E; color:#FAE8D3; padding:12px 6px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.4;">&#8987;<br/>Other</button>
+      </div>
+
+      <!-- Watch setup guide (dynamic) -->
+      <div id="watch-guide" style="background: #3D1A00; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;">
+        <div style="font-size: 13px; color: #FAE8D3; line-height: 1.6;">Select your watch above to see setup instructions.</div>
+      </div>
+
+      <!-- Notifications section (for Apple Watch + Fitbit + Garmin) -->
+      <div id="notif-section" style="background: #3D1A00; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;">
+        <div style="font-size: 13px; font-weight: 700; color: #FFF8F0; margin-bottom: 6px;">&#128276; Browser notifications</div>
+        <div style="font-size: 13px; color: #A0522D; margin-bottom: 12px; line-height: 1.5;">Notifications reach your Apple Watch, Fitbit, and Garmin when your phone is locked.</div>
+        <button
+          onclick="requestNotifPermission()"
+          style="background: #FF6B35; color: #FFF8F0; border: none; border-radius: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; font-family: inherit;"
+        >
+          Enable notifications
+        </button>
+        <div id="notif-status" style="font-size: 12px; color: #A0522D; margin-top: 8px; text-align: center;"></div>
+      </div>
+
+      <!-- Web Bluetooth (advanced, WearOS) -->
+      <div style="background: #3D1A00; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;">
+        <div style="font-size: 13px; font-weight: 700; color: #FFF8F0; margin-bottom: 4px;">&#128268; Direct Bluetooth (advanced)</div>
+        <div style="font-size: 12px; color: #A0522D; margin-bottom: 12px; line-height: 1.5;">Connects directly to your watch over BLE for instant haptic alerts. Works with WearOS and some fitness bands. Chrome on Android only.</div>
+        <button
+          id="bt-connect-btn"
+          onclick="connectBluetooth()"
+          style="background: #FAE8D3; color: #3D1A00; border: 2px solid #F7931E; border-radius: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; font-family: inherit;"
+        >
+          &#128268; Pair smartwatch via Bluetooth
+        </button>
+        <div id="bt-status" style="font-size: 12px; color: #A0522D; margin-top: 8px; text-align: center;"></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <script>
+
+  // ─────────────────────────────────────────
+  // ROUTE DATA
+  // ─────────────────────────────────────────
+
+  const ROUTES = {
+
+    'sandton-ortambo': {
+      id: 'sandton-ortambo',
+      province: 'gauteng',
+      from: 'Sandton',
+      to: 'OR Tambo Airport',
+      distance: '27 km',
+      duration: '35 min',
+      difficulty: 'medium',
+      roads: ['M1 South', 'N3 East', 'R24'],
+      steps: [
+        {
+          title: 'Head south on Rivonia Road',
+          instruction: 'Leave Sandton heading south on Rivonia Road. The M1 on-ramp via Grayston Drive is just past the traffic lights.',
+          detail: 'Sandton City mall will be on your right. The slip road merges into fast-moving M1 traffic — get your speed up early or you\'ll hold up the merge.',
+          laneTotal: 3,
+          laneRecommended: 1,
+          warnings: [],
+          type: 'start',
+          landmark: 'Sandton City mall on your right',
+          tip: { text: 'The Grayston slip road is shorter than it looks. Build speed before you merge — don\'t crawl in.', author: 'Sipho M.' },
+          image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=Rivonia+Rd+%E2%86%92+Grayston+On-ramp'
+        },
+        {
+          title: 'Merge onto M1 South',
+          instruction: 'Join lanes 2 or 3 on the M1 South. Stay middle — don\'t drift left yet.',
+          detail: 'You\'re heading toward the N3 interchange at Marlboro, about 8 km ahead. Don\'t take any Marlboro exits early. Ponte Tower is visible far to your left.',
+          laneTotal: 4,
+          laneRecommended: 1,
+          warnings: ['N3 split coming in 8 km'],
+          type: 'highway',
+          landmark: 'Ponte Tower visible on the far left',
+          tip: { text: 'Two Marlboro exits are close together here. Stay middle and aim for the N3 split — don\'t confuse them.', author: 'Naledi P.' },
+          image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M1+South+%E2%80%94+Stay+Middle+Lanes'
+        },
+        {
+          title: 'CRITICAL — N3/M1 split at Marlboro',
+          instruction: 'At the Marlboro interchange the road splits. Go LEFT to stay on N3 East toward the airport. Right takes you into the CBD.',
+          detail: 'The left fork feels wrong but it\'s right. The N3 East curves left. Look for the large green overhead N3 EAST sign — it appears about 600 m before the split. Start moving left at 3 km.',
+          laneTotal: 4,
+          laneRecommended: 0,
+          warnings: ['Move to lane 1 at 3 km', 'Lock in position at 1 km'],
+          type: 'critical',
+          landmark: 'Large green N3 EAST sign overhead',
+          tip: { text: 'I missed this exit four times before I figured it out. The N3 East sign comes late — start looking for it early, it\'s green and overhead.', author: 'Thabo D.' },
+          image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0%EF%B8%8F+N3+EAST+%E2%86%90+STAY+LEFT'
+        },
+        {
+          title: 'Take Exit 15 — R24 East to OR Tambo',
+          instruction: 'On the N3 East, watch for Exit 15 toward R24 East and OR Tambo. Blue airport signs will appear on the gantry overhead.',
+          detail: 'The R24 exit comes up about 6 km after the N3 merge. Move to lane 1 early — the slip road fills up fast, especially on weekday mornings.',
+          laneTotal: 3,
+          laneRecommended: 0,
+          warnings: ['Exit 15 in 4 km', 'Move to lane 1 at 2 km'],
+          type: 'exit',
+          landmark: 'Blue OR Tambo airport signs on the gantry',
+          tip: { text: 'Missed the R24? Don\'t panic. Stay on N3, take the Boksburg/Springs exit and double back via R21. Adds about 15 min.', author: 'Kefilwe R.' },
+          image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=R24+East+%E2%86%92+Exit+15+OR+Tambo'
+        },
+        {
+          title: 'Arrive at OR Tambo via R24',
+          instruction: 'Follow R24 straight to the terminal. International Departures is the upper level. Arrivals and Domestic are lower.',
+          detail: 'The airport loop is one-way. You get one shot at your drop-off or parking level. Wrong level means a 10-minute loop back — know before you get here.',
+          laneTotal: 2,
+          laneRecommended: 1,
+          warnings: [],
+          type: 'destination',
+          landmark: 'OR Tambo terminal building ahead',
+          tip: { text: 'Upper deck = International Departures. Lower = Domestic and Arrivals. If you miss your level, the loop back is genuinely painful.', author: 'Zanele S.' },
+          image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=OR+Tambo+%E2%80%94+Upper%3DInt%27l+%7C+Lower%3DDom'
+        }
+      ]
+    },
+
+    'cbd-pretoria': {
+      id: 'cbd-pretoria',
+      province: 'gauteng',
+      from: 'Joburg CBD',
+      to: 'Pretoria',
+      distance: '58 km',
+      duration: '55 min',
+      difficulty: 'easy',
+      roads: ['M1 North', 'N1 North'],
+      steps: [
+        {
+          title: 'Get onto M1 North from the CBD',
+          instruction: 'From the CBD, join the M1 North via Empire Road or Smit Street. Once you\'re moving, get into lanes 2 or 3.',
+          detail: 'The far-left lane on M1 North from the CBD forces you off at Hospital Hill — whether you want to or not. Avoid it from the start.',
+          laneTotal: 4,
+          laneRecommended: 1,
+          warnings: [],
+          type: 'start',
+          landmark: 'Hillbrow Tower visible to your right',
+          tip: { text: 'Avoid the far-left lane on M1 North from the CBD. It exits at Hospital Hill automatically — no choice.', author: 'Andile M.' },
+          image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M1+North+from+Joburg+CBD'
+        },
+        {
+          title: 'M1 becomes N1 North past Hyde Park',
+          instruction: 'The M1 naturally merges into the N1 North after Hyde Park. No action needed — just don\'t exit at Hyde Park or Sandton.',
+          detail: 'This is a smooth, seamless transition. Stay middle, keep going north. The Sandton skyline will be on your right as you pass through.',
+          laneTotal: 4,
+          laneRecommended: 2,
+          warnings: ['Buccleuch interchange in 12 km'],
+          type: 'highway',
+          landmark: 'Sandton skyline to your right',
+          tip: { text: 'N1 North past Sandton gets clogged after 4pm. If it\'s afternoon peak, add at least 30 min to your estimate.', author: 'Priya N.' },
+          image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M1+%E2%86%92+N1+North+%E2%80%94+Seamless+Merge'
+        },
+        {
+          title: 'CRITICAL — Buccleuch N1/N3 split',
+          instruction: 'Stay STRAIGHT on N1 North for Pretoria. The left fork is N3 East toward Durban. It looks like the main road — it\'s not. Don\'t go left.',
+          detail: 'Look for blue Pretoria signs, not green ones. Blue = N1 North = you want this. Be in lane 3 of 5 by the 2 km mark. The N3 East lane looks dominant because more traffic takes it — ignore that.',
+          laneTotal: 5,
+          laneRecommended: 2,
+          warnings: ['Start centering at 4 km', 'Lock into lane 3 at 2 km'],
+          type: 'critical',
+          landmark: 'Blue N1 PRETORIA signs overhead',
+          tip: { text: 'Buccleuch trick: look for BLUE Pretoria signs, not green. Green signs are for N3 East. Blue = N1 North = your road.', author: 'Johan V.' },
+          image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0%EF%B8%8F+Buccleuch%3A+STRAIGHT+for+Pretoria'
+        },
+        {
+          title: 'N1 North through Midrand',
+          instruction: 'Cruise north through Midrand. Several exits are close together — don\'t take any of them if you\'re going to Pretoria CBD.',
+          detail: 'Gallagher Estate is on your left. Speed cameras are actively enforced on this stretch — 120 km/h is the limit and it\'s taken seriously.',
+          laneTotal: 4,
+          laneRecommended: 2,
+          warnings: ['Centurion exits in 15 km'],
+          type: 'highway',
+          landmark: 'Gallagher Estate on your left',
+          tip: { text: 'Speed cameras from Midrand to Centurion are no joke. Stick to 120 — the fines are steep.', author: 'Mpho T.' },
+          image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N1+North+%E2%80%94+Midrand+to+Centurion'
+        },
+        {
+          title: 'Take the Church Street exit — Pretoria CBD',
+          instruction: 'Move to lane 1 at the 2 km board. Take the Church Street / Pretoria CBD exit. Don\'t take Pretorius Street just before it — that\'s a different exit.',
+          detail: 'Church Street runs straight into the heart of Pretoria. Pretorius Street appears just before Church Street on the signs — skip it, it drops you in an awkward spot.',
+          laneTotal: 3,
+          laneRecommended: 0,
+          warnings: ['Church Street exit in 3 km', 'Move to lane 1 at 2 km'],
+          type: 'destination',
+          landmark: 'Pretoria skyline comes into view',
+          tip: { text: 'Pretorius Street exit appears just before Church Street. Skip it — Church Street puts you right in the CBD.', author: 'Liesl B.' },
+          image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N1+North+%E2%86%92+Church+St+Pretoria'
+        }
+      ]
+    },
+
+    'soweto-rosebank': {
+      id: 'soweto-rosebank',
+      province: 'gauteng',
+      from: 'Soweto (Maponya Mall)',
+      to: 'Rosebank',
+      distance: '22 km',
+      duration: '30 min',
+      difficulty: 'hard',
+      roads: ['N12 East', 'M1 North'],
+      steps: [
+        {
+          title: 'Head east on N12 from Maponya Mall',
+          instruction: 'Join the N12 East via Klipspruit Valley Road. Stay in lanes 2–3 heading toward Gillooly\'s Interchange.',
+          detail: 'Once on the N12, it\'s a fast road. Get into a comfortable middle lane early and watch for Gillooly\'s signs — about 14 km ahead.',
+          laneTotal: 3,
+          laneRecommended: 1,
+          warnings: ["Gillooly's Interchange in 14 km"],
+          type: 'start',
+          landmark: 'Maponya Mall behind you',
+          tip: { text: 'Speed trap just after the Potchefstroom Road bridge on N12. Ease off before you get there.', author: 'Nkosi B.' },
+          image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N12+East+from+Soweto'
+        },
+        {
+          title: "CRITICAL — Gillooly's Interchange",
+          instruction: "Joburg's biggest interchange. You want M1 North (blue signs) toward Johannesburg. Ignore N3 East (Durban) and N12 West (Potchefstroom).",
+          detail: "Gillooly's has 6 exits over multiple levels. One lane looks like it goes straight but bends right toward N3 East. Middle lanes are the real M1 North. Trust middle — don't be fooled by the apparent 'straight' lane.",
+          laneTotal: 5,
+          laneRecommended: 2,
+          warnings: ['Start reading signs at 3 km', 'Be in lane 3 at 2 km'],
+          type: 'critical',
+          landmark: 'Massive multi-level interchange gantry signs',
+          tip: { text: "The 'straight' lane at Gillooly's actually bends right to N3 East. Middle lanes are the true M1 North. Stay middle no matter what.", author: 'Faith M.' },
+          image: "https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0%EF%B8%8F+Gillooly's%3A+M1+NORTH+%E2%86%92+Middle"
+        },
+        {
+          title: 'M1 North toward Johannesburg',
+          instruction: 'You\'re on M1 North. Don\'t take CBD exits like Smit Street or Empire Road. The Rosebank exit is about 5 km ahead.',
+          detail: 'M1 North past the CBD splits again at Hospital Hill. You need LEFT for Rosebank. Right goes to Houghton and Louis Botha Avenue — don\'t go right.',
+          laneTotal: 4,
+          laneRecommended: 1,
+          warnings: ['Rosebank exit in 5 km', 'Move left at 3 km'],
+          type: 'highway',
+          landmark: 'Joburg CBD skyline ahead',
+          tip: { text: 'Hospital Hill split: LEFT for Rosebank. Right is Houghton/Louis Botha. It catches people off guard — remember: LEFT.', author: 'Carla D.' },
+          image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M1+North+%E2%80%94+Rosebank+in+5+km'
+        },
+        {
+          title: 'Take the Rosebank / Oxford Road exit',
+          instruction: 'Move to lane 1 now. The Rosebank/Oxford Road off-ramp curves left off the M1. Don\'t confuse it with Oxford Road North — Rosebank comes first.',
+          detail: 'Oxford Road drops you straight into the Rosebank strip. The Zone and Zone Rosebank shopping centres are right there. If you see "Oxford Rd North" signs, you\'ve gone too far.',
+          laneTotal: 3,
+          laneRecommended: 0,
+          warnings: ['Rosebank exit in 1 km', 'Move to lane 1 NOW'],
+          type: 'destination',
+          landmark: 'The Zone and Zone Rosebank signs',
+          tip: { text: 'Rosebank exit comes BEFORE Oxford Road North. If you see "Oxford Rd North" on the signs, you\'ve just missed Rosebank.', author: 'Simone A.' },
+          image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M1+%E2%86%92+Rosebank+%2F+Oxford+Rd+Exit'
+        }
+      ]
+    },
+
+    // ── GAUTENG ─────────────────────────────────
+
+    'ortambo-cbd': {
+      id: 'ortambo-cbd', province: 'gauteng',
+      from: 'OR Tambo Airport', to: 'Johannesburg CBD',
+      distance: '27 km', duration: '35 min', difficulty: 'medium',
+      roads: ['R24 West', 'N3 West', 'M1 North'],
+      steps: [
+        { title: 'Exit terminal onto R24 West', instruction: 'Leave the terminal and follow R24 West signs toward Johannesburg. Stay in lanes 2–3.', detail: 'The R24 is fast from the start. Get into middle lanes immediately — far left forces an early exit at Isando.', laneTotal: 3, laneRecommended: 1, warnings: ["Gillooly's in 8 km"], type: 'start', landmark: 'OR Tambo Terminal behind you', tip: { text: 'The R24 from OR Tambo has a nasty dip under the railway bridge — slow down slightly, it catches people out.', author: 'Bongani N.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=R24+West+from+OR+Tambo' },
+        { title: "CRITICAL — Gillooly's Interchange", instruction: "At Gillooly's take the M1 North/West for Johannesburg CBD. Do NOT follow N3 West signs — that loops you south.", detail: 'Look for blue M1 North signs. Middle lanes carry you through. The N3 West split looks tempting — it goes the wrong way.', laneTotal: 5, laneRecommended: 2, warnings: ['Move to lane 3 at 2 km'], type: 'critical', landmark: 'Multi-level gantry at Gillooly's', tip: { text: "Gillooly's is a maze at peak hour. Leave gap in front of you so you can read the overhead signs without panic-braking.", author: 'Thandeka M.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+Gillooly%27s%3A+M1+NORTH+for+CBD' },
+        { title: 'M1 North toward the CBD', instruction: "Continue on M1 North. Don't take Marlboro or Alexandra exits — your CBD exits are coming up.", detail: 'You can see the Joburg skyline ahead. Stay in lanes 2–3 until you see your preferred CBD exit signs.', laneTotal: 4, laneRecommended: 1, warnings: ['CBD exits in 5 km'], type: 'highway', landmark: 'Joburg skyline ahead', tip: { text: 'Smit Street drops you into the middle of the CBD grid. Empire Road is better if you're going west of the CBD.', author: 'Mpendulo D.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M1+North+%E2%80%94+CBD+Skyline+Ahead' },
+        { title: 'Take Smit Street or Empire Road for CBD', instruction: 'Move to lane 1 and take Smit Street for the CBD core, or Empire Road for Braamfontein / UJ.', detail: 'Both exits put you in the CBD grid. Smit Street is the most central. Empire Road is better for Braamfontein.', laneTotal: 3, laneRecommended: 0, warnings: ['CBD exit in 1 km'], type: 'destination', landmark: 'Carlton Centre tower visible', tip: { text: 'Avoid CBD exits after 4:30pm on weekdays. The taxi ranks around Noord Street create gridlock. Rather exit at Empire Rd.', author: 'Zanele K.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M1+%E2%86%92+Smit+St+%2F+Empire+Rd+for+CBD' }
+      ]
+    },
+
+    'eastrand-sandton': {
+      id: 'eastrand-sandton', province: 'gauteng',
+      from: 'East Rand Mall (Boksburg)', to: 'Sandton',
+      distance: '36 km', duration: '42 min', difficulty: 'medium',
+      roads: ['N12 West', 'M1 North', 'M1'],
+      steps: [
+        { title: 'Head west on N12 from Boksburg', instruction: 'Join the N12 West from Boksburg. Stay in lanes 2–3 heading toward Gillooly's Interchange.', detail: 'The N12 West from the East Rand is straightforward for the first 10 km. Keep a steady pace in the middle lanes.', laneTotal: 3, laneRecommended: 1, warnings: ["Gillooly's in 10 km"], type: 'start', landmark: 'East Rand Mall behind you', tip: { text: 'Avoid N12 West from Boksburg between 7–9am. It backs up from Gillooly's all the way to Springs Road.', author: 'Riaan V.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N12+West+from+Boksburg' },
+        { title: "CRITICAL — Gillooly's, take M1 North", instruction: "At Gillooly's Interchange follow M1 North (blue signs) toward Johannesburg. Ignore N3 East (Durban) and N12 West exits.", detail: 'Middle lanes = M1 North. The apparent straight lane bends right to N3 East. Trust middle and follow blue signs.', laneTotal: 5, laneRecommended: 2, warnings: ['Position in lane 3 at 2 km'], type: 'critical', landmark: 'Large multi-level interchange overhead', tip: { text: 'At Gillooly's the signage only clears up at the last 300m. If you're in middle lanes you're always fine.', author: 'Mpho S.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+Gillooly%27s+%E2%86%92+M1+NORTH' },
+        { title: 'M1 North — skip CBD exits', instruction: 'Stay on M1 North past all CBD exits (Smit Street, Empire Road). You're heading to Sandton via Grayston Drive.', detail: 'Grayston Drive exit is about 6 km past the CBD exits. Don't confuse it with earlier M1 exits.', laneTotal: 4, laneRecommended: 1, warnings: ['Grayston Drive exit in 6 km'], type: 'highway', landmark: 'Sandton skyline appears on the right', tip: { text: 'The M1 North after the CBD narrows briefly at Hospital Hill. Stay middle and don't react to the lane squeeze.', author: 'Liesel B.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M1+North+%E2%80%94+Skip+CBD+Exits' },
+        { title: 'Take Grayston Drive exit for Sandton', instruction: 'Move to lane 1. Take the Grayston Drive off-ramp. Follow Grayston Drive north into the Sandton precinct.', detail: 'Grayston Drive takes you straight into Sandton. Sandton City, Nelson Mandela Square, and the Sandton CBD are all off this road.', laneTotal: 3, laneRecommended: 0, warnings: ['Grayston exit in 1 km', 'Move left NOW'], type: 'destination', landmark: 'Sandton City tower cranes visible', tip: { text: 'Grayston off-ramp backs up badly on Friday afternoons. If you're heading to Sandton City specifically, West Street off-ramp is less congested.', author: 'Nandi C.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M1+%E2%86%92+Grayston+Dr+%E2%86%92+Sandton' }
+      ]
+    },
+
+    'fourways-cbd': {
+      id: 'fourways-cbd', province: 'gauteng',
+      from: 'Fourways', to: 'Johannesburg CBD',
+      distance: '28 km', duration: '38 min', difficulty: 'medium',
+      roads: ['N14 East', 'N1 South', 'M1 South'],
+      steps: [
+        { title: 'Head east on N14 from Fourways', instruction: 'From Fourways Mall, join the N14 East toward Johannesburg. Alternatively use William Nicol Drive south.', detail: 'The N14 East connects to the N1 at the Buccleuch area. Stay in middle lanes — the far left exits at Rivonia early.', laneTotal: 3, laneRecommended: 1, warnings: ['N1 junction in 8 km'], type: 'start', landmark: 'Fourways Mall behind you', tip: { text: 'William Nicol south to Sandton is quicker than N14 in peak hour. Only take N14 if traffic on William Nicol is jammed.', author: 'Gerrit F.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N14+East+from+Fourways' },
+        { title: 'CRITICAL — Join N1 South at Buccleuch', instruction: 'At the N14/N1 junction, take N1 South toward Johannesburg CBD. Don't follow N1 North (that goes to Pretoria).', detail: 'South is toward Joburg. North is toward Pretoria. The signage is clear — blue Johannesburg signs point south.', laneTotal: 4, laneRecommended: 1, warnings: ['N1 South junction in 1 km'], type: 'critical', landmark: 'N1 South blue signs overhead', tip: { text: 'The Buccleuch junction also sees the N3 merge here. Focus on N1 SOUTH — don't get confused with N3 or N14 options.', author: 'Thabo V.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+N14+%E2%86%92+N1+SOUTH+for+CBD' },
+        { title: 'N1 South becomes M1 — head for CBD', instruction: 'N1 South transitions into M1 South approaching the CBD. Stay in lanes 2–3 and watch for your exit.', detail: 'Take Smit Street or Simmonds Street for the CBD core. Empire Road exits before these — it's for Braamfontein.', laneTotal: 4, laneRecommended: 1, warnings: ['CBD exits in 3 km'], type: 'destination', landmark: 'CBD skyline directly ahead', tip: { text: 'If you're going to Park Station or Noord Street, take Simmonds Street. It puts you right on the money.', author: 'Kealeboga M.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N1%2FM1+South+%E2%86%92+Joburg+CBD' }
+      ]
+    },
+
+    'centurion-sandton': {
+      id: 'centurion-sandton', province: 'gauteng',
+      from: 'Centurion', to: 'Sandton',
+      distance: '40 km', duration: '45 min', difficulty: 'easy',
+      roads: ['N1 South', 'M1 South'],
+      steps: [
+        { title: 'Join N1 South from Centurion', instruction: 'From Centurion, join the N1 South toward Johannesburg. Use the John Vorster Drive or West Street on-ramps.', detail: 'You're heading toward Joburg. N1 South is well-signed and straightforward from Centurion. Stay in lanes 2–3.', laneTotal: 4, laneRecommended: 1, warnings: ['Buccleuch in 25 km'], type: 'start', landmark: 'Centurion Lake on your left', tip: { text: 'If it's before 7am, N1 South flows well. After 7:30am it starts backing up from Midrand all the way to Centurion.', author: 'Hannelie S.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N1+South+from+Centurion' },
+        { title: 'Through Midrand — stay on N1', instruction: 'Pass all Midrand exits without taking them. Gallagher Estate on your left. Speed cameras active — stick to 120.', detail: 'Several Midrand exits appear close together. Ignore all of them. You want the N1 all the way to Johannesburg.', laneTotal: 4, laneRecommended: 2, warnings: ['Buccleuch in 12 km'], type: 'highway', landmark: 'Gallagher Estate on your left', tip: { text: 'Camera on N1 South just before the Allandale off-ramp. Known blackspot — don't push past 120.', author: 'Daan P.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N1+South+%E2%80%94+Midrand+Stretch' },
+        { title: 'CRITICAL — Buccleuch N1/N3 split', instruction: 'Stay STRAIGHT on N1 South toward Johannesburg. N3 East forks left toward Durban. Ignore the N3 — you want N1.', detail: 'Same junction as coming from Pretoria. N3 East looks like the "main" road — it isn't. Blue N1 Johannesburg signs straight ahead.', laneTotal: 5, laneRecommended: 2, warnings: ['Buccleuch split in 2 km', 'Stay in lanes 2–3'], type: 'critical', landmark: 'Blue N1 Johannesburg signs', tip: { text: 'This is Buccleuch. Every Joburg driver has a story about being caught here. Lane 3 of 5 is your safe lane.', author: 'Sipho M.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+Buccleuch%3A+N1+SOUTH+%E2%86%92+Stay+Straight' },
+        { title: 'Take Grayston Drive for Sandton', instruction: 'After Buccleuch, N1 transitions into M1. Take the Grayston Drive exit on the right for Sandton.', detail: 'The Grayston exit comes up about 4 km after Buccleuch. Move right in good time — don't miss it or you're heading into the CBD.', laneTotal: 3, laneRecommended: 0, warnings: ['Grayston in 3 km', 'Move right at 2 km'], type: 'destination', landmark: 'Sandton towers visible to the right', tip: { text: 'Grayston on a Thursday night or Friday afternoon is a nightmare. Consider the Rivonia Rd or Wierda Valley exits as alternatives into Sandton.', author: 'Kobus A.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M1+%E2%86%92+Grayston+Dr+exit+for+Sandton' }
+      ]
+    },
+
+    // ── KWAZULU-NATAL ────────────────────────────
+
+    'durban-kingsshaka': {
+      id: 'durban-kingsshaka', province: 'kzn',
+      from: 'Durban CBD', to: 'King Shaka International Airport',
+      distance: '35 km', duration: '40 min', difficulty: 'medium',
+      roads: ['N2 North', 'R102'],
+      steps: [
+        { title: 'Head north on N2 from Durban CBD', instruction: 'From the Durban CBD, join the N2 North via Margaret Mncadi Avenue or the Masabalala Yengwa interchange.', detail: 'The N2 North is the main arterial heading toward Umhlanga and the airport. Get into lanes 2–3 from the start.', laneTotal: 4, laneRecommended: 1, warnings: ['Umhlanga interchange in 15 km'], type: 'start', landmark: 'Durban harbour on your right', tip: { text: 'Leaving Durban CBD northbound, the N2 on-ramp near the beachfront is always congested in the morning. Use the Masabalala Yengwa approach instead.', author: 'Thuli N.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+North+from+Durban+CBD' },
+        { title: 'Past Umhlanga — stay on N2 North', instruction: 'Pass the Umhlanga Rocks Drive exit without taking it. Keep going on N2 North toward the airport.', detail: 'Umhlanga is a popular exit — traffic slows here. Don't follow the mass exit. Stay on N2 North for the airport.', laneTotal: 3, laneRecommended: 1, warnings: ['La Mercy/Airport exit in 10 km'], type: 'highway', landmark: 'Umhlanga Lighthouse visible right', tip: { text: 'The Umhlanga Gateway exit sees massive traffic on weekends. If it's backed up, stay on N2 — don't get drawn in.', author: 'Preggie P.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N2+North+%E2%80%94+Past+Umhlanga' },
+        { title: 'CRITICAL — Take R102 La Mercy Airport exit', instruction: 'Watch carefully for the R102 / La Mercy / King Shaka Airport exit. It comes up after a long straight. Move left NOW.', detail: 'This exit is easy to miss because the N2 seems like it will take you there — it won't. The R102 is your airport exit. Blue airport signs appear about 2 km before.', laneTotal: 3, laneRecommended: 0, warnings: ['Airport exit in 3 km', 'Move to lane 1 at 2 km'], type: 'critical', landmark: 'Blue King Shaka Airport signs on gantry', tip: { text: 'Miss this exit and you're heading to Ballito. The next U-turn opportunity adds 25 minutes. Move left as soon as airport signs appear.', author: 'Ashwin P.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+R102+La+Mercy+%E2%86%92+King+Shaka+Airport' },
+        { title: 'Arrive at King Shaka via R102', instruction: 'Follow R102 straight to the terminal. International and Domestic departures are in the same building — upper level drops, lower arrivals.', detail: 'The airport road is straightforward after the R102 exit. Just follow the airport signs to your terminal.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'destination', landmark: 'King Shaka Terminal building ahead', tip: { text: 'King Shaka has one combined terminal. Drop-off is upper level, pick-up is lower. Don't confuse them on return trips.', author: 'Nomsa Z.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=R102+%E2%86%92+King+Shaka+Terminal' }
+      ]
+    },
+
+    'durban-pietermaritzburg': {
+      id: 'durban-pietermaritzburg', province: 'kzn',
+      from: 'Durban CBD', to: 'Pietermaritzburg',
+      distance: '80 km', duration: '75 min', difficulty: 'medium',
+      roads: ['N3 West'],
+      steps: [
+        { title: 'Join N3 West from Durban CBD', instruction: 'From the CBD, get onto the N3 West (Western Freeway) toward Pietermaritzburg. Pay your toll at the Marianhill booth.', detail: 'The N3 West toll is unavoidable. Have your e-tag or cash ready. After the toll, the road opens up into 3 lanes.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Durban CBD skyline behind you', tip: { text: 'The N3 toll from Durban is R35 as of 2025. Keep change or your e-tag ready — the queue at the cash booth can stretch.', author: 'Sbu M.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N3+West+%E2%80%94+Durban+to+PMB' },
+        { title: 'Through Pinetown — stay on N3', instruction: 'Keep on N3 through the Pinetown area. Don't exit at Pinetown CBD or the Fields Hill industrial exits.', detail: 'Pinetown exits are tempting if you're not sure, but staying on N3 is correct. Heavy truck traffic in the left lane here.', laneTotal: 3, laneRecommended: 1, warnings: ['Fields Hill descent in 5 km'], type: 'highway', landmark: 'Pinetown factories on your left', tip: { text: 'Pinetown to Fields Hill has heavy trucks in the left lane. Give them space — their brakes take much longer to work on the descent.', author: 'Mervin G.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N3+West+%E2%80%94+Through+Pinetown' },
+        { title: 'CRITICAL — Fields Hill steep descent', instruction: 'Fields Hill is a steep, winding descent. Drop to a lower gear before the top — use engine braking. Do not ride your brakes continuously.', detail: 'This is one of the most dangerous road sections in KZN. Trucks overheat brakes here regularly. Stay in the right lane and keep your distance from any heavy vehicles ahead.', laneTotal: 2, laneRecommended: 1, warnings: ['Steep descent — drop gear now', 'Watch for runaway truck lanes'], type: 'critical', landmark: 'Runaway truck escape ramps on left', tip: { text: 'Fields Hill kills. Literally. Never tailgate trucks on this descent. If a truck starts indicating, move far away — brake failure is real here.', author: 'Willem S.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+Fields+Hill+%E2%80%94+Steep+Descent%2C+Lower+Gear' },
+        { title: 'Through Cato Ridge — almost there', instruction: 'Past Fields Hill, through Cato Ridge. Flat stretch now. Continue on N3 West — Pietermaritzburg is 30 km ahead.', detail: 'The worst is behind you. Cato Ridge has a petrol station if you need a break. Speed cameras are active on this stretch.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'highway', landmark: 'Midlands Meander signs on left', tip: { text: 'The Cato Ridge area is prime for fog in winter mornings — visibility can drop to zero. If there's mist, slow down well below the limit.', author: 'Nomcebo D.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N3+West+%E2%80%94+Through+Cato+Ridge' },
+        { title: 'Take your PMB exit off N3', instruction: 'Pietermaritzburg exits start appearing. Take the CBD / Church Street exit for the city centre, or Midlands Mall exit if that's your destination.', detail: 'Pietermaritzburg has multiple N3 exits. Church Street is for the CBD core. Midlands Mall is off the N3 closer to the outskirts.', laneTotal: 2, laneRecommended: 0, warnings: ['PMB exits in 5 km'], type: 'destination', landmark: 'PMB city hall spire visible', tip: { text: 'The N3 through PMB is also a through-route to Joburg. Don't exit too early — Burger's Pass exits are before the city, not in it.', author: 'Zanele P.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N3+West+%E2%86%92+PMB+City+Centre+Exit' }
+      ]
+    },
+
+    'umhlanga-durban': {
+      id: 'umhlanga-durban', province: 'kzn',
+      from: 'Umhlanga', to: 'Durban CBD',
+      distance: '18 km', duration: '28 min', difficulty: 'easy',
+      roads: ['M4 South', 'N2 South'],
+      steps: [
+        { title: 'Head south on M4 or N2 from Umhlanga', instruction: 'From Umhlanga Rocks Drive, join either M4 South (coastal route) or N2 South (faster, highway).', detail: 'M4 is scenic through the North Beach corridor. N2 is quicker in off-peak. In morning peak, M4 through Umhlanga backs up — take N2.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Umhlanga Lighthouse on the right', tip: { text: 'M4 south from Umhlanga during school holidays is a car park. Rather join N2 from Umhlanga Rocks Drive intersection.', author: 'Lisa M.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M4+or+N2+South+from+Umhlanga' },
+        { title: 'N2 South — follow CBD signs', instruction: 'Stay on N2 South. Pass the Blue Lagoon / Riverside area. Take the Margaret Mncadi Avenue or NMR Avenue exit for Durban CBD.', detail: 'Margaret Mncadi Avenue drops you on the beachfront side of the CBD. NMR Avenue puts you more centrally. Both work.', laneTotal: 3, laneRecommended: 0, warnings: ['CBD exit in 3 km'], type: 'destination', landmark: 'Moses Mabhida Stadium arch visible', tip: { text: 'NMR Avenue exit for the CBD is less congested than Margaret Mncadi in the morning. Try it if you're running late.', author: 'Rishi K.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N2+South+%E2%86%92+Durban+CBD' }
+      ]
+    },
+
+    'ballito-durban': {
+      id: 'ballito-durban', province: 'kzn',
+      from: 'Ballito', to: 'Durban CBD',
+      distance: '55 km', duration: '55 min', difficulty: 'easy',
+      roads: ['N2 South'],
+      steps: [
+        { title: 'Join N2 South from Ballito', instruction: 'From Ballito, join the N2 South toward Durban. The Ballito interchange is well-signed.', detail: 'N2 South from Ballito is mostly 3-lane highway. Stay in lanes 2–3 and enjoy a straightforward run toward Durban.', laneTotal: 3, laneRecommended: 1, warnings: ['King Shaka Airport in 15 km'], type: 'start', landmark: 'Sugar cane fields on both sides', tip: { text: 'The N2 from Ballito drops to 2 lanes near La Mercy — it backs up badly on Saturday mornings when people head to Durban for sports.', author: 'Craig F.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+South+from+Ballito' },
+        { title: 'Past King Shaka Airport — keep going', instruction: 'You'll pass the King Shaka Airport interchange. Don't exit here unless you're flying. Keep on N2 South for Durban.', detail: 'Airport signage is prominent but not for you. Continue south past La Mercy and through the Umhlanga approach.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'highway', landmark: 'Blue King Shaka Airport signs', tip: { text: 'La Mercy tollgate is on this stretch. Have your e-tag or R20 ready.', author: 'Yolanda M.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N2+South+%E2%80%94+Past+King+Shaka' },
+        { title: 'Arrive in Durban CBD via N2 South', instruction: 'Continue on N2 South through Umhlanga and into Durban. Take Margaret Mncadi or NMR Avenue for the CBD.', detail: 'The N2 ends at the Durban CBD. Choose your exit based on your destination — beachfront, station, or city centre.', laneTotal: 3, laneRecommended: 0, warnings: ['CBD exit in 3 km'], type: 'destination', landmark: 'Durban beachfront ahead', tip: { text: 'Sunday afternoons, N2 North back to Ballito is jammed from 3pm. If you can, leave Durban before 2pm or after 6pm.', author: 'Strini P.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+South+%E2%86%92+Durban+CBD+Arrival' }
+      ]
+    },
+
+    'durban-southcoast': {
+      id: 'durban-southcoast', province: 'kzn',
+      from: 'Durban CBD', to: 'South Coast (Amanzimtoti)',
+      distance: '28 km', duration: '30 min', difficulty: 'easy',
+      roads: ['N2 South'],
+      steps: [
+        { title: 'Join N2 South from Durban CBD', instruction: 'From the CBD, join the N2 South via Edwin Swales Drive or Brickfield Road interchange toward Amanzimtoti.', detail: 'N2 South from Durban heads through the Bluff and Prospecton industrial areas. Stay in lanes 2–3.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Bluff on your right', tip: { text: 'N2 South from Durban at 5pm Friday is stop-start all the way to Umbogintwini. Leave after 7pm if you can.', author: 'Quinton A.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+South+from+Durban+CBD' },
+        { title: 'Take the Amanzimtoti exit off N2', instruction: 'Watch for the Amanzimtoti / Solomon Mahlangu exit off the N2 South. Move to lane 1 when the exit signs appear.', detail: 'Amanzimtoti (locals call it "Toti") has two main exits. The first puts you at the main Toti strip, the second is more toward Warner Beach.', laneTotal: 3, laneRecommended: 0, warnings: ['Amanzimtoti exit in 3 km'], type: 'destination', landmark: 'Coastline visible on the left', tip: { text: 'First Toti exit for the beach strip and malls. Second exit (Warner Beach) is quieter and less congested.', author: 'Sharon P.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N2+South+%E2%86%92+Amanzimtoti+Exit' }
+      ]
+    },
+
+    // ── FREE STATE ───────────────────────────────
+
+    'bloem-johannesburg': {
+      id: 'bloem-johannesburg', province: 'free-state',
+      from: 'Bloemfontein', to: 'Johannesburg',
+      distance: '400 km', duration: '4 hrs', difficulty: 'easy',
+      roads: ['N1 North'],
+      steps: [
+        { title: 'Join N1 North from Bloemfontein', instruction: 'From Bloem CBD, get onto the N1 North via Henry Street or Zastron Street. This is your road all the way to Johannesburg.', detail: 'N1 North is long, flat, and mostly 2-lane from Bloem. Get comfortable. The first significant town is Winburg after about 100 km.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Naval Hill and monument behind you', tip: { text: 'Fill up in Bloem before you leave. The N1 has petrol stations but they're far apart and sometimes unexpectedly closed.', author: 'Hettie V.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N1+North+from+Bloemfontein' },
+        { title: 'N1 North through Winburg and Ventersburg', instruction: 'Continue on N1 North through Winburg and Ventersburg. Long straight stretches — stay alert and watch your speed.', detail: 'Speed cameras are active on the N1 Free State stretch. The road is deceptively fast-feeling — check your speedometer regularly.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'highway', landmark: 'Flat Free State plains on all sides', tip: { text: 'The N1 Free State section is notorious for fatigue accidents. Stop at Ventersburg or Winburg for a 10-min break if you're feeling drowsy.', author: 'Pieter J.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N1+North+%E2%80%94+Free+State+Plains' },
+        { title: 'CRITICAL — Johannesburg approach, choose your exit', instruction: 'As you enter Gauteng, multiple Johannesburg exits appear quickly. Know your destination suburb before you get here.', detail: 'Soweto exits come first. Then CBD. Then the M1/N1 split toward Sandton and Pretoria. If unsure, aim for CBD and navigate from there.', laneTotal: 4, laneRecommended: 1, warnings: ['Joburg exits start in 20 km'], type: 'critical', landmark: 'Joburg skyline on the horizon', tip: { text: 'The transition from N1 into Joburg's road network happens fast after Midvaal. Know whether you want CBD, Sandton, or Soweto before the exits start.', author: 'Tebogo M.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+Joburg+Approach+%E2%80%94+Know+Your+Exit' }
+      ]
+    },
+
+    'bloem-maseru': {
+      id: 'bloem-maseru', province: 'free-state',
+      from: 'Bloemfontein', to: 'Maseru Border (Lesotho)',
+      distance: '145 km', duration: '1 hr 40 min', difficulty: 'easy',
+      roads: ['N8 East'],
+      steps: [
+        { title: 'Head east on N8 from Bloemfontein', instruction: 'From Bloem, join the N8 East via Zastron Street or the Eastern Bypass. This road takes you straight to the Lesotho border.', detail: 'N8 East passes through Botshabelo before opening up into the Lesotho highlands approach. Get into a comfortable lane and set your cruise control.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Bloemfontein Airport on your left', tip: { text: 'Botshabelo township is on the N8 East — it's a busy section with pedestrians and taxis. Slow down and stay alert through this stretch.', author: 'Anna V.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N8+East+from+Bloemfontein' },
+        { title: 'Through Thaba Nchu — keep on N8', instruction: 'Pass through Thaba Nchu. The N8 continues east. Don't confuse it with the R64 turnoff.', detail: 'Thaba Nchu has fuel and food. Worth stopping if you need it — the border area has limited facilities.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'highway', landmark: 'Thaba Nchu mountain on your right', tip: { text: 'Thaba Nchu area has speed bumps through the town. Slow right down — they're sharp and will damage your car.', author: 'Moshe T.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N8+East+%E2%80%94+Through+Thaba+Nchu' },
+        { title: 'Arrive at Maseru Bridge Border Post', instruction: 'Follow N8 East to the Maseru Bridge border crossing. Have your passport and vehicle documents ready before you join the queue.', detail: 'Maseru Bridge is the main Bloem-Lesotho crossing. Peak times (Friday evenings, Monday mornings) see long queues. Budget 30–60 min extra.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'destination', landmark: 'Caledon River and border post ahead', tip: { text: 'Keep your vehicle registration, passport, and any permits for your vehicle visible and accessible. Border officials will check all of these.', author: 'Lerato M.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N8+East+%E2%86%92+Maseru+Bridge+Border' }
+      ]
+    },
+
+    'bloem-welkom': {
+      id: 'bloem-welkom', province: 'free-state',
+      from: 'Bloemfontein', to: 'Welkom',
+      distance: '165 km', duration: '1 hr 45 min', difficulty: 'easy',
+      roads: ['N30 North', 'R30'],
+      steps: [
+        { title: 'Head north on R30 from Bloemfontein', instruction: 'From Bloem, take the R30 North toward Welkom via Brandfort. This is a direct, mostly 2-lane route.', detail: 'The R30 from Bloem to Welkom is a quiet national road. Light traffic, straight stretches, but watch out for livestock on the road in farming areas.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Free State flatlands ahead', tip: { text: 'Livestock crossing is a real risk on the R30 North of Brandfort. Slow down at dusk — animals are hard to see.', author: 'Frikkie O.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=R30+North+from+Bloemfontein' },
+        { title: 'Through Brandfort — keep on R30', instruction: 'Pass through Brandfort and continue north on R30. Welkom is about 70 km after Brandfort.', detail: 'Brandfort has a fuel stop. The road continues straight north with very little traffic. Cruise comfortably.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'highway', landmark: 'Mine headgear visible on the horizon', tip: { text: 'The old gold mining headgear visible from the R30 as you approach Welkom is a landmark — means you're close.', author: 'Gerda H.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=R30+North+%E2%80%94+Approaching+Welkom' },
+        { title: 'Arrive in Welkom', instruction: 'Enter Welkom from the south on R30. The city is well-laid-out in a circular plan — follow signs to your destination.', detail: 'Welkom was designed as a planned city with circular roads. Navigation inside is easy once you're in. Follow the R30 to the Welkom CBD circle.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'destination', landmark: 'Welkom water tower on the horizon', tip: { text: 'Welkom's circular road design confuses first-timers. Keep the CBD clock tower as your central reference point.', author: 'Elmarie S.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=R30+%E2%86%92+Welkom+CBD' }
+      ]
+    },
+
+    // ── WESTERN CAPE ─────────────────────────────
+
+    'cpt-airport': {
+      id: 'cpt-airport', province: 'western-cape',
+      from: 'Cape Town CBD', to: 'Cape Town International Airport',
+      distance: '20 km', duration: '25 min', difficulty: 'medium',
+      roads: ['N2 East', 'M10'],
+      steps: [
+        { title: 'Join N2 East from Cape Town CBD', instruction: 'From the CBD, take the N2 East (Eastern Boulevard) toward the airport. Use the De Waal Drive or Buitenkant Street approach.', detail: 'The N2 East is the main arterial from the CBD to the airport. It passes through Salt River and Woodstock. Stay in lanes 2–3.', laneTotal: 4, laneRecommended: 1, warnings: ['Airport exit in 15 km'], type: 'start', landmark: 'Table Mountain behind you', tip: { text: 'De Waal Drive approach from the City Bowl adds 5 min but avoids the worst of Buitenkant/Nelson Mandela Boulevard traffic.', author: 'Pieter H.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+East+from+Cape+Town+CBD' },
+        { title: 'CRITICAL — Take M10 Settler's Way airport exit', instruction: 'Watch carefully for the M10 / Airport Approach / Settler's Way exit. It's on the RIGHT after the N2 passes Athlone. Move right early.', detail: 'The airport exit is well-signed in blue, but it comes up quickly after a sweeping left bend. Miss it and you're heading to Stellenbosch.', laneTotal: 4, laneRecommended: 3, warnings: ['Airport exit in 3 km', 'Move right at 2 km'], type: 'critical', landmark: 'Blue airport signs on gantry overhead', tip: { text: 'The airport exit is on the RIGHT — unusual for Cape Town. Don't hug the left like normal. Move right early.', author: 'Melissa B.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+M10+Airport+Exit+%E2%80%94+MOVE+RIGHT' },
+        { title: 'Follow airport signs to terminal', instruction: 'From M10 / Settler's Way, follow airport signs straight to the terminal. Departures are upper level, Arrivals lower.', detail: 'Cape Town International has a clear approach road. International Departures and Domestic share the same terminal building — follow the signs.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'destination', landmark: 'Airport terminal building ahead', tip: { text: 'Drop-off is a short-stay zone — you get 10 minutes free then it's charged. If you're waiting for someone, use the nearby park-and-wait area.', author: 'Christo K.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M10+%E2%86%92+Cape+Town+International+Terminal' }
+      ]
+    },
+
+    'cpt-stellenbosch': {
+      id: 'cpt-stellenbosch', province: 'western-cape',
+      from: 'Cape Town CBD', to: 'Stellenbosch',
+      distance: '50 km', duration: '50 min', difficulty: 'medium',
+      roads: ['N2 East', 'R310'],
+      steps: [
+        { title: 'Take N2 East from Cape Town CBD', instruction: 'Join the N2 East from the CBD. Pass through Woodstock and Salt River heading toward the Winelands.', detail: 'You'll pass the airport turnoff — don't take it. Keep on N2 East past the airport for the Stellenbosch turn.', laneTotal: 4, laneRecommended: 1, warnings: ['Airport exit (ignore it) in 15 km', 'R310 exit in 25 km'], type: 'start', landmark: 'Table Mountain behind, Winelands ahead', tip: { text: 'N2 East gets busy heading into Somerset West during the morning peak. Consider leaving Cape Town before 7am for a smooth run.', author: 'Annette D.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+East+from+Cape+Town' },
+        { title: 'CRITICAL — Take R310 for Stellenbosch', instruction: 'After passing the airport, watch for the R310 Stellenbosch exit. It's on the LEFT. Don't continue on N2 (that goes to Somerset West and George).', detail: 'R310 is your Stellenbosch road. It's also called Baden Powell Drive on the older signs. Blue Stellenbosch / Franschhoek signs.', laneTotal: 3, laneRecommended: 0, warnings: ['R310 exit in 5 km', 'Move left at 3 km'], type: 'critical', landmark: 'Wine estate signage appears', tip: { text: 'R310 vs N2 split — you want R310 LEFT for Stellenbosch. N2 straight goes to Somerset West. Very different destinations, almost no difference in the road appearance.', author: 'Jacques S.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+R310+LEFT+for+Stellenbosch' },
+        { title: 'Follow R310 into Stellenbosch', instruction: 'R310 (Baden Powell Drive) winds through wine farms and vineyards into Stellenbosch. Follow R310 into the town centre.', detail: 'This is a beautiful drive. The R310 takes about 15 km to reach Stellenbosch town. Speed limit drops as you enter town.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'destination', landmark: 'Vineyard estates on both sides', tip: { text: 'Stellenbosch streets are narrow and parking is scarce on weekends. Head for the Adam Tas Road parking area — it's the best base for the town centre.', author: 'Elsabe P.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=R310+%E2%86%92+Stellenbosch+Town+Centre' }
+      ]
+    },
+
+    'cpt-paarl': {
+      id: 'cpt-paarl', province: 'western-cape',
+      from: 'Cape Town CBD', to: 'Paarl',
+      distance: '60 km', duration: '55 min', difficulty: 'easy',
+      roads: ['N1 North'],
+      steps: [
+        { title: 'Head north on N1 from Cape Town CBD', instruction: 'From the CBD, join the N1 North via De Waal Drive or Buitenkant. The N1 is your road all the way to Paarl.', detail: 'N1 North is a wide, modern freeway heading into the Winelands. Pass through Bellville and the northern suburbs.', laneTotal: 4, laneRecommended: 1, warnings: ['Du Toitskloof Tunnel area in 45 km'], type: 'start', landmark: 'Table Mountain behind you on the left', tip: { text: 'N1 North out of Cape Town passes through the airport area — this stretch is often busy. Consider the N7/Koeberg Interchange if heading north via Bloubergstrand.', author: 'Rina V.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N1+North+from+Cape+Town' },
+        { title: 'Through Bellville — stay on N1', instruction: 'Keep on N1 North through Bellville. Don't exit at Bellville CBD. Continue toward Paarl.', detail: 'Bellville exits are for the northern suburbs. You want the N1 to keep going toward Wellington and Paarl.', laneTotal: 4, laneRecommended: 2, warnings: ['Paarl exit in 15 km'], type: 'highway', landmark: 'Tygerberg Hills on your right', tip: { text: 'The N1 through Bellville narrows near the Durban Road interchange. Keep right to avoid being forced off.', author: 'Dirk O.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N1+North+%E2%80%94+Through+Bellville' },
+        { title: 'Take the Paarl / Jan Phillips Drive exit', instruction: 'Take the Paarl / Jan Phillips Drive exit off the N1. It drops you onto the main Paarl access road.', detail: 'Jan Phillips Drive runs through Paarl's Main Street precinct. Follow it into town.', laneTotal: 3, laneRecommended: 0, warnings: ['Paarl exit in 3 km', 'Move left at 2 km'], type: 'destination', landmark: 'Paarl Rock on the mountain to your right', tip: { text: 'Paarl has several N1 exits close together. The Jan Phillips Drive exit is the one for the town centre and wine estates along Main Road.', author: 'Lizelle B.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N1+North+%E2%86%92+Paarl+Jan+Phillips+Exit' }
+      ]
+    },
+
+    'cpt-blouberg': {
+      id: 'cpt-blouberg', province: 'western-cape',
+      from: 'Cape Town CBD', to: 'Bloubergstrand',
+      distance: '25 km', duration: '28 min', difficulty: 'easy',
+      roads: ['N1 North', 'R27'],
+      steps: [
+        { title: 'N1 North from Cape Town CBD', instruction: 'Join N1 North from the CBD and head past the Koeberg interchange toward the West Coast.', detail: 'The N1 North from Cape Town splits at Koeberg — you need R27 West Coast Road for Bloubergstrand, not N7 toward Namibia.', laneTotal: 4, laneRecommended: 1, warnings: ['R27 exit in 18 km'], type: 'start', landmark: 'Signal Hill to your right', tip: { text: 'Table View and Bloubergstrand are very popular on weekends — the R27 backs up from 9am on Saturdays. Go early or go late.', author: 'Graham T.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N1+North+%E2%86%92+R27+for+Blouberg' },
+        { title: 'Take R27 West Coast Road exit', instruction: 'At the Koeberg Interchange, take the R27 West Coast Road exit toward Bloubergstrand, Table View, and Milnerton.', detail: 'R27 is the coastal road running north from Cape Town along the Atlantic. It's also called West Coast Road. Bloubergstrand is about 8 km up R27.', laneTotal: 3, laneRecommended: 0, warnings: ['R27 exit in 2 km'], type: 'destination', landmark: 'Koeberg Nuclear Power Station on your right', tip: { text: 'Bloubergstrand beach parking fills up early on weekends. Beach Road has the best views of Table Mountain but can be very windy.', author: 'Natalie S.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=R27+%E2%86%92+Bloubergstrand' }
+      ]
+    },
+
+    'cpt-somersetwest': {
+      id: 'cpt-somersetwest', province: 'western-cape',
+      from: 'Cape Town CBD', to: 'Somerset West',
+      distance: '45 km', duration: '45 min', difficulty: 'easy',
+      roads: ['N2 East'],
+      steps: [
+        { title: 'N2 East from Cape Town CBD', instruction: 'Join N2 East from the CBD and head toward the Helderberg basin. Pass the airport and continue east.', detail: 'You'll pass the airport turnoff (don't take it) and the R310 Stellenbosch exit (don't take that either). Keep on N2 East.', laneTotal: 4, laneRecommended: 1, warnings: ['Somerset West exit in 35 km'], type: 'start', landmark: 'Table Mountain visible behind you', tip: { text: 'N2 East toward Somerset West on a Friday afternoon is one of Cape Town's worst bottlenecks. Budget double the time from 4–7pm.', author: 'Brendan H.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+East+%E2%86%92+Somerset+West' },
+        { title: 'Take the Somerset West N2 exit', instruction: 'Watch for the Somerset West / Strand exit off N2 East. It's well-signed on the left. Move left in good time.', detail: 'The Somerset West exit drops you onto the R44 which runs through Somerset West toward Strand and Gordon's Bay.', laneTotal: 3, laneRecommended: 0, warnings: ['Somerset West exit in 5 km', 'Move left at 3 km'], type: 'destination', landmark: 'Helderberg Mountain straight ahead', tip: { text: 'Somerset West and Strand are close together here. Take the first Somerset West exit for the town centre and Vergelegen. Second exit is for Strand/Gordon's Bay.', author: 'Carel B.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N2+East+%E2%86%92+Somerset+West+Exit' }
+      ]
+    },
+
+    'cpt-houtbay': {
+      id: 'cpt-houtbay', province: 'western-cape',
+      from: 'Cape Town CBD', to: 'Hout Bay',
+      distance: '22 km', duration: '32 min', difficulty: 'hard',
+      roads: ['M3 South', 'M63'],
+      steps: [
+        { title: 'Take De Waal Drive / M3 South from CBD', instruction: 'From the CBD, join De Waal Drive southbound which transitions into the M3 South. Head toward Newlands and Claremont.', detail: 'M3 South passes below Table Mountain through the southern suburbs — Newlands, Claremont, Kenilworth. Stay in middle lanes.', laneTotal: 3, laneRecommended: 1, warnings: ['Constantia/Hout Bay split in 12 km'], type: 'start', landmark: 'Table Mountain on your right', tip: { text: 'M3 South from De Waal Drive in the morning rush (7–9am) is very slow. Give yourself extra time or take Main Road through the suburbs.', author: 'Ingrid S.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=M3+South+from+Cape+Town+CBD' },
+        { title: 'CRITICAL — M63 Constantia / Hout Bay split', instruction: 'At the Wynberg/Constantia junction, take M63 Hout Bay Road to the right. Going straight on M3 takes you to Muizenberg — wrong direction.', detail: 'The M3/M63 split is easy to miss as both roads look similar at speed. Look for the Hout Bay / Constantia signs on the right-hand off-ramp.', laneTotal: 3, laneRecommended: 2, warnings: ['M63 split in 2 km', 'Move right at 1 km'], type: 'critical', landmark: 'Constantia Village shopping centre on right', tip: { text: 'M3 straight = Muizenberg and False Bay. M63 right = Constantia and Hout Bay. This split catches visitors every single time.', author: 'Mark O.' }, image: 'https://placehold.co/800x360/C1440E/FFF8F0?text=%E2%9A%A0+M63+RIGHT+for+Hout+Bay' },
+        { title: 'M63 through Constantia to Hout Bay', instruction: 'Follow M63 through Constantia and over the Constantia Nek pass into Hout Bay.', detail: 'Constantia Nek is a beautiful but narrow mountain pass. It's a single lane each way with tight bends. Slow down and take your time.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'destination', landmark: 'Hout Bay harbour and Chapman's Peak ahead', tip: { text: 'Constantia Nek has baboons. Seriously. Keep windows up and don't leave food visible in the car — they will break in.', author: 'Samantha L.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=M63+%E2%86%92+Constantia+Nek+%E2%86%92+Hout+Bay' }
+      ]
+    },
+
+    // ── EASTERN CAPE ──────────────────────────────
+
+    'pe-airport': {
+      id: 'pe-airport', province: 'eastern-cape',
+      from: 'Gqeberha (PE) CBD', to: 'Gqeberha Airport',
+      distance: '8 km', duration: '15 min', difficulty: 'easy',
+      roads: ['N2 North', 'Airport Rd'],
+      steps: [
+        { title: 'Head north on N2 from Gqeberha CBD', instruction: 'From the PE CBD, join the N2 North briefly toward the airport. The airport is well-signed from most entry points.', detail: 'Gqeberha Airport is very close to the city. The whole journey is about 8 km. Follow airport signs from the CBD.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'start', landmark: 'PE harbour behind you', tip: { text: 'Gqeberha Airport is small and check-in closes early. Budget 60 min before departure even for domestic flights.', author: 'Angie M.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+North+from+Gqeberha+CBD' },
+        { title: 'Take the Airport Road exit', instruction: 'Watch for the Airport Road off-ramp from the N2 North. Follow the clear blue airport signs to the terminal.', detail: 'The airport terminal is a short drive from the N2. There's a single terminal for both domestic and international flights.', laneTotal: 2, laneRecommended: 0, warnings: ['Airport exit in 2 km'], type: 'destination', landmark: 'Control tower visible ahead', tip: { text: 'Gqeberha Airport parking is cheap and close to the terminal. No need for drop-off stress — park and walk in.', author: 'Louw H.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=Airport+Rd+%E2%86%92+Gqeberha+Terminal' }
+      ]
+    },
+
+    'pe-uitenhage': {
+      id: 'pe-uitenhage', province: 'eastern-cape',
+      from: 'Gqeberha (Port Elizabeth)', to: 'Uitenhage',
+      distance: '30 km', duration: '35 min', difficulty: 'easy',
+      roads: ['N2 West', 'R75'],
+      steps: [
+        { title: 'Head west on N2 from Gqeberha', instruction: 'From PE, join the N2 West toward Uitenhage. Pass through the industrial areas of Deal Party and Markman.', detail: 'The N2 West from PE heads through industrial Gqeberha before opening up. The VW / Volkswagen plant is visible on your right.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'start', landmark: 'VW plant on the right', tip: { text: 'N2 West from PE at 7am has VW plant shift traffic. If your timing coincides, expect a delay near the Markman industrial area.', author: 'Petrus G.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+West+from+Gqeberha' },
+        { title: 'Take R75 / Uitenhage exit', instruction: 'Watch for the R75 / Uitenhage exit off the N2 West. It's a right-hand exit. Follow into Uitenhage town.', detail: 'Uitenhage is the industrial and automotive hub of the Eastern Cape. The R75 drops you into the town centre.', laneTotal: 2, laneRecommended: 1, warnings: ['Uitenhage exit in 5 km'], type: 'destination', landmark: 'Uitenhage town clock tower visible', tip: { text: 'Uitenhage has several industrial areas — make sure you know which part of town you're headed to before you get off the R75.', author: 'Thando M.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=R75+%E2%86%92+Uitenhage+Town+Centre' }
+      ]
+    },
+
+    'el-kwt': {
+      id: 'el-kwt', province: 'eastern-cape',
+      from: 'East London', to: 'King William's Town (Bhisho)',
+      distance: '60 km', duration: '55 min', difficulty: 'easy',
+      roads: ['N2 West'],
+      steps: [
+        { title: 'Head west on N2 from East London', instruction: 'From East London CBD, join the N2 West toward King William's Town (Qonce) and Bhisho.', detail: 'N2 West from East London passes through the Buffalo City suburbs before opening into a 2-lane national road.', laneTotal: 3, laneRecommended: 1, warnings: [], type: 'start', landmark: 'Buffalo River behind you', tip: { text: 'The N2 West from East London has speed cameras near the Mdantsane turnoff. Ease off through that stretch.', author: 'Sipho N.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+West+from+East+London' },
+        { title: 'Past Mdantsane — stay on N2', instruction: 'Keep on N2 West past Mdantsane. Don't take R72 (that goes to Alice and Queenstown). Keep N2 for KWT.', detail: 'Mdantsane is a large township on your right. Continue on N2 West — KWT is about 35 km ahead from here.', laneTotal: 2, laneRecommended: 1, warnings: ['KWT exit in 35 km'], type: 'highway', landmark: 'Mdantsane suburb on the right', tip: { text: 'The N2 West after Mdantsane passes through rolling Eastern Cape hills — beautiful but also a known fatigue road. Stay alert.', author: 'Nomfundo Z.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=N2+West+%E2%80%94+Past+Mdantsane' },
+        { title: 'Take the King William's Town / Bhisho exit', instruction: 'Take the KWT / Qonce exit off N2 West. Follow signs into King William's Town town centre or Bhisho government precinct.', detail: 'King William's Town and Bhisho are adjacent. Bhisho is the official capital of the Eastern Cape — it has the provincial government buildings.', laneTotal: 2, laneRecommended: 0, warnings: ['KWT exit in 3 km'], type: 'destination', landmark: 'Eastern Cape Legislature building visible', tip: { text: 'KWT and Bhisho share an exit. If you're going to the provincial government offices, follow Bhisho signs at the off-ramp. KWT CBD is a left turn.', author: 'Velani M.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+West+%E2%86%92+KWT+%2F+Bhisho+Exit' }
+      ]
+    },
+
+    'el-airport': {
+      id: 'el-airport', province: 'eastern-cape',
+      from: 'East London CBD', to: 'East London Airport',
+      distance: '12 km', duration: '18 min', difficulty: 'easy',
+      roads: ['N2 East', 'R72'],
+      steps: [
+        { title: 'Head east on N2 from East London CBD', instruction: 'From the CBD, take the N2 East briefly. The airport is northeast of the city — follow blue airport signs from the CBD.', detail: 'East London Airport is very close to town. The drive is mostly local roads through Stirling and Braelyn.', laneTotal: 2, laneRecommended: 1, warnings: [], type: 'start', landmark: 'East London beachfront behind you', tip: { text: 'East London Airport has limited parking. Use the short-stay drop-off zone if you're dropping someone — long-stay parking fills up quickly.', author: 'Cara W.' }, image: 'https://placehold.co/800x360/F7931E/FFF8F0?text=N2+East+from+East+London+CBD' },
+        { title: 'Take the Airport turn-off', instruction: 'Follow airport signs from the N2 to the terminal. East London Airport has a single terminal for all flights.', detail: 'The approach road to EL Airport is well-signed. Domestic departures and arrivals share the same small terminal.', laneTotal: 2, laneRecommended: 1, warnings: ['Airport turn-off in 3 km'], type: 'destination', landmark: 'Control tower ahead', tip: { text: 'EL Airport's check-in queues are short but the flights are often delayed. Don't rush — but don't be late either, they do close on time.', author: 'Mike D.' }, image: 'https://placehold.co/800x360/FAE8D3/C1440E?text=Airport+Rd+%E2%86%92+East+London+Terminal' }
+      ]
+    }
+
+
+  };
+
+
+  // ─────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────
+
+  let currentRouteId  = null;
+  let currentStep     = 0;
+  let spinnerInterval = null;
+  let spinAngle       = 0;
+
+  const SCREENS = ['home', 'loading', 'overview', 'briefing', 'complete', 'drive', 'ar', 'post-drive'];
+
+
+  // ─────────────────────────────────────────
+  // SCREEN MANAGEMENT
+  // ─────────────────────────────────────────
+
+  function showScreen(name) {
+    SCREENS.forEach(s => {
+      const el = document.getElementById('s-' + s);
+      if (el) el.style.display = 'none';
+    });
+
+    const target = document.getElementById('s-' + name);
+    if (!target) return;
+
+    // Loading needs flex to centre its content
+    target.style.display = (name === 'loading') ? 'flex' : 'block';
+    window.scrollTo(0, 0);
+
+    if (name === 'loading') {
+      startSpinner();
+    } else {
+      stopSpinner();
+    }
+  }
+
+
+  // ─────────────────────────────────────────
+  // SPINNER (JS-driven, no <style> block)
+  // ─────────────────────────────────────────
+
+  function startSpinner() {
+    stopSpinner();
+    spinAngle = 0;
+    spinnerInterval = setInterval(function() {
+      spinAngle = (spinAngle + 12) % 360;
+      const el = document.getElementById('spinner');
+      if (el) el.style.transform = 'rotate(' + spinAngle + 'deg)';
+    }, 30);
+  }
+
+  function stopSpinner() {
+    if (spinnerInterval) {
+      clearInterval(spinnerInterval);
+      spinnerInterval = null;
+    }
+  }
+
+
+  // ─────────────────────────────────────────
+  // SEARCH
+  // ─────────────────────────────────────────
+
+  const LOADING_MSGS = [
+    "Scanning South Africa's roads...",
+    "Checking for those sneaky splits...",
+    "Asking locals for their tips...",
+    "Mapping your off-ramps...",
+    "Almost ready to brief you..."
+  ];
+
+  // ─────────────────────────────────────────
+  // PROVINCE FILTER
+  // ─────────────────────────────────────────
+
+  var currentProvince = 'all';
+  var PROVINCE_IDS = ['all','gauteng','kzn','free-state','western-cape','eastern-cape'];
+
+  function setProvince(province) {
+    currentProvince = province;
+    PROVINCE_IDS.forEach(function(p) {
+      var tab = document.getElementById('tab-' + p);
+      if (!tab) return;
+      if (p === province) {
+        tab.style.backgroundColor = '#FF6B35';
+        tab.style.color           = '#FFF8F0';
+        tab.style.borderColor     = '#FF6B35';
+      } else {
+        tab.style.backgroundColor = '#FAE8D3';
+        tab.style.color           = '#3D1A00';
+        tab.style.borderColor     = '#F7931E';
+      }
+    });
+    renderRouteCards();
+  }
+
+  function renderRouteCards() {
+    var container = document.getElementById('route-list');
+    if (!container) return;
+    var all  = Object.values(ROUTES);
+    var list = currentProvince === 'all'
+      ? all
+      : all.filter(function(r) { return r.province === currentProvince; });
+
+    if (list.length === 0) {
+      container.innerHTML = '<p style="font-size:14px; color:#A0522D; text-align:center; padding:20px 0;">No routes yet for this province — they\'re coming soon!</p>';
+      return;
+    }
+
+    container.innerHTML = list.map(function(r) {
+      var d     = diffStyle(r.difficulty);
+      var roads = r.roads.join(' · ');
+      return '<div onclick="loadRoute(\'' + r.id + '\')" ' +
+        'style="background-color:#FAE8D3; border-radius:12px; padding:16px 18px; margin-bottom:12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px; border:2px solid transparent;" ' +
+        'onmouseover="this.style.borderColor=\'#FF6B35\'" onmouseout="this.style.borderColor=\'transparent\'">' +
+          '<div>' +
+            '<div style="font-size:15px; font-weight:700; color:#3D1A00; margin-bottom:5px;">' + r.from + ' &#8594; ' + r.to + '</div>' +
+            '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">' +
+              '<span style="font-size:13px; color:#A0522D;">' + r.distance + ' &middot; ' + r.duration + '</span>' +
+              '<span style="background-color:' + d.bg + '; color:#FFF8F0; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;">' + d.label + '</span>' +
+              '<span style="font-size:12px; color:#A0522D;">' + roads + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span style="font-size:1.4rem; color:#FF6B35; flex-shrink:0;">&#8594;</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function searchRoute() {
+    var from = (document.getElementById('input-from').value || '').trim();
+    var to   = (document.getElementById('input-to').value   || '').trim();
+
+    if (!from && !to) {
+      alert("Let us know where you're starting and where you're headed.");
+      return;
+    }
+    if (!from) { alert("Where are you starting from?"); return; }
+    if (!to)   { alert("Where are you headed?"); return; }
+
+    // Check preset routes first (they have richer community tips)
+    var fl = from.toLowerCase(), tl = to.toLowerCase();
+    var allRoutes = Object.values(ROUTES).filter(function(r) { return r.province !== 'dynamic'; });
+    for (var i = 0; i < allRoutes.length; i++) {
+      var r  = allRoutes[i];
+      var rf = r.from.toLowerCase(), rt = r.to.toLowerCase();
+      var fromOk = rf.includes(fl) || fl.split(' ').some(function(w) { return w.length > 3 && rf.includes(w); });
+      var toOk   = rt.includes(tl) || tl.split(' ').some(function(w) { return w.length > 3 && rt.includes(w); });
+      if (fromOk && toOk) { loadRoute(r.id); return; }
+    }
+
+    // No preset match — generate a live route for ANY SA destination
+    searchDynamic(from, to);
+  }
+
+  // ─────────────────────────────────────────
+  // USE MY LOCATION
+  // ─────────────────────────────────────────
+
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      alert("Your browser doesn't support location access. Type your starting point manually.");
+      return;
+    }
+    var btn = document.querySelector('[onclick="useMyLocation()"]');
+    if (btn) btn.textContent = 'Finding your location...';
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        var lat = pos.coords.latitude.toFixed(5);
+        var lon = pos.coords.longitude.toFixed(5);
+        // Reverse geocode with Nominatim
+        fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json', {
+          headers: { 'Accept-Language': 'en' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var name = data.address.suburb || data.address.village || data.address.town || data.address.city || ('GPS ' + lat + ',' + lon);
+          document.getElementById('input-from').value = name;
+          if (btn) btn.textContent = '\uD83D\uDCCD Use my current location as starting point';
+        })
+        .catch(function() {
+          document.getElementById('input-from').value = lat + ',' + lon;
+          if (btn) btn.textContent = '\uD83D\uDCCD Use my current location as starting point';
+        });
+      },
+      function(err) {
+        if (btn) btn.textContent = '\uD83D\uDCCD Use my current location as starting point';
+        alert("Couldn't get your location — " + (err.message || 'permission denied') + ". Type it in manually.");
+      }
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // DYNAMIC ROUTING (Nominatim + OSRM)
+  // Covers every city, township, rural area
+  // and inter-provincial route in South Africa
+  // ─────────────────────────────────────────
+
+  function geocodePlace(query) {
+    var url = 'https://nominatim.openstreetmap.org/search?q=' +
+      encodeURIComponent(query + ', South Africa') +
+      '&format=json&limit=1&countrycodes=za';
+    return fetch(url, { headers: { 'Accept-Language': 'en' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length) throw new Error('"' + query + '" wasn\'t found. Try a nearby town or use a more specific name.');
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: data[0].display_name.split(',')[0] };
+      });
+  }
+
+  function fetchOSRMRoute(from, to) {
+    var url = 'https://router.project-osrm.org/route/v1/driving/' +
+      from.lon + ',' + from.lat + ';' +
+      to.lon   + ',' + to.lat +
+      '?steps=true&overview=false';
+    return fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.code !== 'Ok' || !data.routes.length) throw new Error('No drivable route found between these two places.');
+        return data.routes[0];
+      });
+  }
+
+  function osrmToSteps(legs, fromLabel, toLabel) {
+    var all = [];
+    legs.forEach(function(leg) { leg.steps.forEach(function(s) { all.push(s); }); });
+
+    // Keep steps that matter to a driver
+    var kept = all.filter(function(s) {
+      var t = s.maneuver.type;
+      return t === 'depart' || t === 'arrive' || t === 'off ramp' || t === 'on ramp' ||
+             t === 'fork' || t === 'roundabout' || t === 'rotary' ||
+             (t === 'turn' && s.distance > 200) ||
+             (t === 'new name' && s.distance > 5000) ||
+             s.distance > 10000;
+    });
+
+    // Always include depart and arrive
+    var hasDepart = kept.some(function(s) { return s.maneuver.type === 'depart'; });
+    var hasArrive = kept.some(function(s) { return s.maneuver.type === 'arrive'; });
+    if (!hasDepart && all.length) kept.unshift(all[0]);
+    if (!hasArrive && all.length) kept.push(all[all.length - 1]);
+
+    return kept.map(function(s, i) {
+      var t    = s.maneuver.type;
+      var mod  = s.maneuver.modifier || 'straight';
+      var name = (s.name || s.ref || 'the road').trim();
+      var ref  = s.ref ? ' (' + s.ref + ')' : '';
+      var dist = s.distance;
+      var distKm = (dist / 1000).toFixed(1);
+
+      // ExitSA step type
+      var exitType = 'highway';
+      if (t === 'depart')    exitType = 'start';
+      else if (t === 'arrive')   exitType = 'destination';
+      else if (t === 'off ramp') exitType = 'exit';
+      else if (t === 'fork' || t === 'roundabout' || t === 'rotary') exitType = 'critical';
+
+      // Is this a major road?
+      var isHighway = !!(s.ref && /^(N|R)\d/.test(s.ref)) || dist > 8000;
+      var laneTotal = isHighway ? 4 : 2;
+
+      // Lane recommendation
+      var laneRec = Math.floor(laneTotal / 2) - 1;
+      if (/left/.test(mod))  laneRec = 0;
+      if (/right/.test(mod)) laneRec = laneTotal - 1;
+      laneRec = Math.max(0, Math.min(laneRec, laneTotal - 1));
+
+      // Warning badges
+      var warnings = [];
+      if (exitType === 'exit' || exitType === 'critical') {
+        if (dist > 3000) warnings.push('Exit in ' + distKm + ' km');
+        warnings.push('Move to lane ' + (laneRec + 1) + ' at 1 km');
+      }
+
+      // Human-readable instruction
+      var instr = '';
+      if (t === 'depart')    instr = 'Head out from ' + fromLabel + ' onto ' + name + ref;
+      else if (t === 'arrive')   instr = 'You\'ve arrived at ' + toLabel;
+      else if (t === 'off ramp') instr = 'Take the off-ramp onto ' + name + ref;
+      else if (t === 'on ramp')  instr = 'Join the highway via the on-ramp onto ' + name + ref;
+      else if (t === 'fork')     instr = 'At the fork, keep ' + mod + ' onto ' + name + ref;
+      else if (t === 'turn')     instr = 'Turn ' + mod + ' onto ' + name + ref;
+      else if (t === 'roundabout' || t === 'rotary') instr = 'Enter the roundabout and exit onto ' + name + ref;
+      else instr = 'Continue on ' + name + ref + ' for ' + distKm + ' km';
+
+      var detail = dist > 1000
+        ? 'You\'ll be on ' + name + ref + ' for about ' + distKm + ' km. Stay alert for signs.'
+        : 'Short section — just ' + Math.round(dist) + ' m.';
+
+      var palette = ['F7931E/FFF8F0', 'FAE8D3/C1440E', 'FF6B35/FFF8F0'];
+      var imgBg   = exitType === 'critical' ? 'C1440E/FFF8F0' : palette[i % 3];
+      var imgTxt  = encodeURIComponent((name + ref).substring(0, 40));
+
+      return {
+        title:           (exitType === 'critical' ? 'CRITICAL \u2014 ' : '') + instr.substring(0, 55),
+        instruction:     instr,
+        detail:          detail,
+        laneTotal:       laneTotal,
+        laneRecommended: laneRec,
+        warnings:        warnings,
+        type:            exitType,
+        landmark:        name + ref,
+        location:        s.maneuver.location
+          ? { lat: s.maneuver.location[1], lon: s.maneuver.location[0] }
+          : null,
+        tip:             { text: 'Be the first driver to add a tip for this section!', author: 'ExitSA Community' },
+        image:           'https://placehold.co/800x360/' + imgBg + '?text=' + imgTxt
+      };
+    });
+  }
+
+  function searchDynamic(fromText, toText) {
+    if (!navigator.onLine) {
+      alert("You\u2019re offline right now.\n\nCustom routes need an internet connection for geocoding and mapping. All 25 preset routes work perfectly offline \u2014 browse them by province below.");
+      return;
+    }
+    showScreen('loading');
+    var msgEl  = document.getElementById('loading-msg');
+    var msgIdx = 0;
+    var msgs   = [
+      'Geocoding "' + fromText + '"...',
+      'Geocoding "' + toText + '"...',
+      'Calculating your route across South Africa...',
+      'Mapping every off-ramp and interchange...',
+      'Almost ready...'
+    ];
+    var msgInt = setInterval(function() {
+      msgIdx = (msgIdx + 1) % msgs.length;
+      if (msgEl) msgEl.textContent = msgs[msgIdx];
+    }, 900);
+
+    Promise.all([ geocodePlace(fromText), geocodePlace(toText) ])
+      .then(function(coords) {
+        var fromCoord = coords[0], toCoord = coords[1];
+        return fetchOSRMRoute(fromCoord, toCoord).then(function(route) {
+          return { route: route, fromCoord: fromCoord, toCoord: toCoord };
+        });
+      })
+      .then(function(res) {
+        clearInterval(msgInt);
+        var route     = res.route;
+        var fromCoord = res.fromCoord;
+        var toCoord   = res.toCoord;
+
+        var distKm   = (route.distance / 1000).toFixed(0);
+        var totalMin = Math.round(route.duration / 60);
+        var h = Math.floor(totalMin / 60), m = totalMin % 60;
+        var dur = h > 0 ? h + ' hr' + (m ? ' ' + m + ' min' : '') : m + ' min';
+
+        var steps = osrmToSteps(route.legs, fromCoord.label, toCoord.label);
+
+        // Determine if inter-provincial
+        var isLong = parseFloat(distKm) > 100;
+
+        // Clean up any previous dynamic route
+        Object.keys(ROUTES).forEach(function(k) { if (k.startsWith('dynamic-')) delete ROUTES[k]; });
+
+        var rid = 'dynamic-' + Date.now();
+        var roadRefs = [];
+        route.legs.forEach(function(leg) {
+          leg.steps.forEach(function(s) { if (s.ref) roadRefs.push(s.ref); });
+        });
+        var uniqueRoads = roadRefs.filter(function(v, i, a) { return a.indexOf(v) === i; }).slice(0, 5);
+
+        ROUTES[rid] = {
+          id:         rid,
+          province:   'dynamic',
+          from:       fromText,
+          to:         toText,
+          distance:   distKm + ' km',
+          duration:   dur,
+          difficulty: parseFloat(distKm) > 300 ? 'medium' : 'easy',
+          roads:      uniqueRoads.length ? uniqueRoads : ['SA Roads'],
+          interprovincial: isLong,
+          steps:      steps
+        };
+
+        currentRouteId = rid;
+        currentStep    = 0;
+        buildOverview(rid);
+        showScreen('overview');
+      })
+      .catch(function(err) {
+        clearInterval(msgInt);
+        showScreen('home');
+        alert("Hmm, that didn\u2019t work \u2014 " + (err.message || 'something went wrong') + "\n\nTips:\n\u2022 Try full place names: \u2018Johannesburg CBD\u2019 not \u2018JHB\u2019\n\u2022 For rural areas, include the municipality or nearest town\n\u2022 Check your internet connection");
+      });
+  }
+
+
+  // ─────────────────────────────────────────
+  // LOAD ROUTE
+  // ─────────────────────────────────────────
+
+  function loadRoute(routeId) {
+    currentRouteId = routeId;
+    currentStep    = 0;
+    showScreen('loading');
+
+    let msgIndex = 0;
+    const msgEl  = document.getElementById('loading-msg');
+    const msgInt = setInterval(function() {
+      msgIndex = (msgIndex + 1) % LOADING_MSGS.length;
+      if (msgEl) msgEl.textContent = LOADING_MSGS[msgIndex];
+    }, 550);
+
+    setTimeout(function() {
+      clearInterval(msgInt);
+      buildOverview(routeId);
+      showScreen('overview');
+    }, 2400);
+  }
+
+
+  // ─────────────────────────────────────────
+  // OVERVIEW
+  // ─────────────────────────────────────────
+
+  function diffStyle(d) {
+    return {
+      easy:   { bg: '#F7931E', label: 'EASY'   },
+      medium: { bg: '#FF6B35', label: 'MEDIUM' },
+      hard:   { bg: '#C1440E', label: 'HARD'   }
+    }[d] || { bg: '#FF6B35', label: 'MEDIUM' };
+  }
+
+  function typeIcon(t) {
+    return { start: '🚦', highway: '🛣', critical: '⚠️', exit: '↩', destination: '📍' }[t] || '•';
+  }
+
+  function buildOverview(routeId) {
+    const r = ROUTES[routeId];
+    if (!r) return;
+
+    const diff = diffStyle(r.difficulty);
+
+    // Header text
+    document.getElementById('ov-route-label').textContent = r.from + ' → ' + r.to;
+    document.getElementById('ov-route-meta').textContent  = r.distance + ' · ' + r.duration;
+
+    // Stats
+    document.getElementById('ov-stats').innerHTML =
+      statBox(r.distance, 'distance') +
+      statBox(r.duration, 'drive time') +
+      '<div style="flex:1; background-color:' + diff.bg + '; border-radius:8px; padding:12px; text-align:center; border:2px solid rgba(255,248,240,0.35);">' +
+        '<div style="font-size:1rem; font-weight:800; color:#FFF8F0;">' + diff.label + '</div>' +
+        '<div style="font-size:11px; color:#FAE8D3; margin-top:2px;">difficulty</div>' +
+      '</div>';
+
+    // Road tags + inter-provincial badge
+    var roadTags = r.roads
+      .map(function(road) {
+        return '<span style="background-color:rgba(255,248,240,0.25); border:2px solid rgba(255,248,240,0.4); color:#FFF8F0; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700;">' + road + '</span>';
+      }).join('');
+    if (r.interprovincial) {
+      roadTags += '<span style="background-color:rgba(255,248,240,0.15); border:2px solid rgba(255,248,240,0.4); color:#FFF8F0; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700;">&#127758; Inter-provincial</span>';
+    }
+    if (r.province === 'dynamic') {
+      roadTags += '<span style="background-color:rgba(255,248,240,0.15); border:2px solid rgba(255,248,240,0.4); color:#FFF8F0; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700;">&#128246; Live route</span>';
+    }
+    document.getElementById('ov-roads').innerHTML = roadTags;
+
+    // Critical note
+    var critCount = r.steps.filter(function(s) { return s.type === 'critical'; }).length;
+    var noteEl    = document.getElementById('ov-critical-note');
+    if (r.province === 'dynamic') {
+      noteEl.innerHTML = 'This is a live route generated for your exact trip. ' +
+        (critCount > 0 ? 'It includes <strong style="color:#C1440E;">' + critCount + ' critical spot' + (critCount > 1 ? 's' : '') + '</strong> to watch. ' : '') +
+        'Community tips aren\'t available yet — you can be the first to add them after your drive.';
+    } else if (critCount > 0) {
+      noteEl.innerHTML = 'This route has <strong style="color:#C1440E;">' + critCount + ' critical spot' + (critCount > 1 ? 's' : '') + '</strong> where most people go wrong. The briefing covers each one in detail.';
+    } else {
+      noteEl.textContent = "It's a pretty straightforward route — still worth a quick briefing.";
+    }
+
+    // Steps list
+    document.getElementById('ov-steps').innerHTML = r.steps.map(function(step, i) {
+      const crit = step.type === 'critical';
+      return '<div style="display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid #FAE8D3;">' +
+        '<div style="width:32px; height:32px; border-radius:50%; background-color:' + (crit ? '#C1440E' : '#FAE8D3') + '; border:2px solid ' + (crit ? '#C1440E' : '#F7931E') + '; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; color:' + (crit ? '#FFF8F0' : '#FF6B35') + '; font-weight:800;">' + (i + 1) + '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:14px; font-weight:' + (crit ? '700' : '600') + '; color:' + (crit ? '#C1440E' : '#3D1A00') + '; margin-bottom:3px;">' + typeIcon(step.type) + ' ' + step.title + '</div>' +
+          '<div style="font-size:13px; color:#A0522D; line-height:1.4;">' + step.instruction.substring(0, 90) + (step.instruction.length > 90 ? '...' : '') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function statBox(value, label) {
+    return '<div style="flex:1; background-color:rgba(255,248,240,0.25); border-radius:8px; padding:12px; text-align:center;">' +
+      '<div style="font-size:1.2rem; font-weight:800; color:#FFF8F0;">' + value + '</div>' +
+      '<div style="font-size:11px; color:#FAE8D3; margin-top:2px;">' + label + '</div>' +
+    '</div>';
+  }
+
+
+  // ─────────────────────────────────────────
+  // BRIEFING
+  // ─────────────────────────────────────────
+
+  function startBriefing() {
+    currentStep = 0;
+    renderStep();
+    showScreen('briefing');
+  }
+
+  function renderStep() {
+    const route = ROUTES[currentRouteId];
+    const step  = route.steps[currentStep];
+    const total = route.steps.length;
+    const pct   = Math.round(((currentStep + 1) / total) * 100);
+    const crit  = step.type === 'critical';
+
+    // Counter + progress
+    document.getElementById('step-counter').textContent    = 'Step ' + (currentStep + 1) + ' of ' + total;
+    document.getElementById('progress-bar').style.width    = pct + '%';
+    document.getElementById('btn-prev').style.opacity      = currentStep === 0 ? '0.35' : '1';
+    document.getElementById('btn-next').textContent        = currentStep === total - 1 ? 'Finish briefing ✓' : 'Next step →';
+
+    // Lane guide
+    var lanes = '';
+    for (var i = 0; i < step.laneTotal; i++) {
+      var active = (i === step.laneRecommended);
+      lanes += '<div style="flex:1; height:54px; background-color:' + (active ? '#FF6B35' : '#FAE8D3') + '; border-radius:7px; border:2px solid ' + (active ? '#C1440E' : '#F7931E') + '; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:' + (active ? '20px' : '14px') + '; color:' + (active ? '#FFF8F0' : '#A0522D') + ';">' +
+        (active ? '&#10003;' : (i + 1)) +
+      '</div>';
+    }
+
+    // Warning badges
+    var badges = '';
+    if (step.warnings && step.warnings.length) {
+      badges = '<div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px;">' +
+        step.warnings.map(function(w) {
+          return '<span style="background-color:#C1440E; color:#FFF8F0; padding:5px 13px; border-radius:20px; font-size:13px; font-weight:600;">&#9201; ' + w + '</span>';
+        }).join('') +
+      '</div>';
+    }
+
+    // Critical alert banner
+    var critBanner = '';
+    if (crit) {
+      critBanner = '<div style="background-color:#C1440E; padding:11px 20px; display:flex; align-items:center; gap:10px;">' +
+        '<span style="font-size:1.3rem;">&#9888;&#65039;</span>' +
+        '<span style="font-size:14px; font-weight:700; color:#FFF8F0;">This is a critical spot — most people get this wrong</span>' +
+      '</div>';
+    }
+
+    document.getElementById('slide-content').innerHTML =
+      // Image + banner
+      '<div style="position:relative;">' +
+        '<img src="' + step.image + '" alt="' + step.title + ' road view" onerror="this.onerror=null;this.src=offlineImg(this.src);" style="width:100%; max-height:240px; object-fit:cover; display:block;" />' +
+        critBanner +
+      '</div>' +
+
+      '<div style="padding:20px 20px 0;">' +
+
+        // Title
+        '<div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:14px;">' +
+          '<span style="font-size:1.6rem; flex-shrink:0; line-height:1.2;">' + typeIcon(step.type) + '</span>' +
+          '<h2 style="font-size:1.25rem; font-weight:900; color:' + (crit ? '#C1440E' : '#3D1A00') + '; margin:0; line-height:1.3;">' + step.title + '</h2>' +
+        '</div>' +
+
+        // Instruction
+        '<p style="font-size:1rem; color:#3D1A00; margin:0 0 10px; line-height:1.65; font-weight:500;">' + step.instruction + '</p>' +
+
+        // Detail
+        '<p style="font-size:0.9rem; color:#A0522D; margin:0 0 20px; line-height:1.65;">' + step.detail + '</p>' +
+
+        // Warning badges
+        badges +
+
+        // Lane guide card
+        '<div style="background-color:#FAE8D3; border-radius:10px; padding:16px; margin-bottom:16px;">' +
+          '<div style="font-size:12px; font-weight:700; color:#A0522D; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Lane Guide</div>' +
+          '<div style="display:flex; gap:7px; margin-bottom:8px;">' + lanes + '</div>' +
+          '<p style="font-size:13px; color:#A0522D; margin:6px 0 0; text-align:center;">Be in lane ' + (step.laneRecommended + 1) + ' of ' + step.laneTotal + '</p>' +
+        '</div>' +
+
+        // Landmark
+        '<div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; padding:11px 14px; background-color:#FAE8D3; border-radius:8px; border-left:4px solid #F7931E;">' +
+          '<span style="font-size:1.1rem;">&#128205;</span>' +
+          '<span style="font-size:13px; color:#3D1A00; font-weight:500;">Look for: <strong>' + step.landmark + '</strong></span>' +
+        '</div>' +
+
+        // Built-in tip
+        '<div style="background-color:#FAE8D3; border-radius:10px; padding:16px; margin-bottom:12px; border-left:4px solid #FF6B35;">' +
+          '<div style="font-size:11px; font-weight:700; color:#A0522D; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">&#128172; Local tip</div>' +
+          '<p style="font-size:0.9rem; color:#3D1A00; margin:0 0 8px; line-height:1.55; font-style:italic;">&ldquo;' + step.tip.text + '&rdquo;</p>' +
+          '<div style="font-size:13px; font-weight:600; color:#A0522D;">— ' + step.tip.author + '</div>' +
+        '</div>' +
+
+        // Community tips from localStorage
+        renderCommunityTipsForStep(currentRouteId, currentStep) +
+
+      '</div>';
+
+    // Scroll back to top of the slide
+    window.scrollTo(0, 0);
+  }
+
+  function nextStep() {
+    const route = ROUTES[currentRouteId];
+    if (currentStep < route.steps.length - 1) {
+      currentStep++;
+      renderStep();
+    } else {
+      finishBriefing();
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+      renderStep();
+    }
+  }
+
+  function finishBriefing() {
+    buildComplete();
+    showScreen('complete');
+  }
+
+
+  // ─────────────────────────────────────────
+  // COMPLETE
+  // ─────────────────────────────────────────
+
+  function buildComplete() {
+    const route     = ROUTES[currentRouteId];
+    const critSteps = route.steps.filter(function(s) { return s.type === 'critical'; });
+
+    var html =
+      '<h3 style="font-size:1rem; font-weight:800; color:#C1440E; margin:0 0 12px;">' + route.from + ' → ' + route.to + '</h3>' +
+      '<div style="display:flex; gap:20px; margin-bottom:12px;">' +
+        '<span style="font-size:14px; color:#A0522D;">&#128207; ' + route.distance + '</span>' +
+        '<span style="font-size:14px; color:#A0522D;">&#9203; ' + route.duration + '</span>' +
+        '<span style="font-size:14px; color:#A0522D;">&#128506; ' + route.steps.length + ' steps</span>' +
+      '</div>';
+
+    if (critSteps.length > 0) {
+      html += '<div style="margin-top:10px;">' +
+        '<div style="font-size:13px; font-weight:700; color:#C1440E; margin-bottom:6px;">&#9888;&#65039; Critical spots you\'ve nailed:</div>' +
+        critSteps.map(function(s) {
+          return '<div style="font-size:13px; color:#3D1A00; padding:3px 0;">&#10003; ' + s.title + '</div>';
+        }).join('') +
+      '</div>';
+    }
+
+    document.getElementById('complete-summary').innerHTML = html;
+  }
+
+  function restartRoute() {
+    currentStep = 0;
+    buildOverview(currentRouteId);
+    showScreen('overview');
+  }
+
+
+  // ─────────────────────────────────────────
+  // SWIPE SUPPORT (mobile)
+  // ─────────────────────────────────────────
+
+  var touchStartX = 0;
+
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    var diff     = touchStartX - e.changedTouches[0].screenX;
+    var briefing = document.getElementById('s-briefing');
+    if (briefing && briefing.style.display !== 'none' && Math.abs(diff) > 60) {
+      if (diff > 0) nextStep();
+      else prevStep();
+    }
+  }, { passive: true });
+
+
+  // ─────────────────────────────────────────
+  // DRIVE MODE
+  // ─────────────────────────────────────────
+
+  var driveWatchId   = null;
+  var driveStepIdx   = 0;
+  var driveWarned    = {};   // { stepIdx: { 3000: true, 1000: true, 500: true, 200: true } }
+  var driveMuted     = false;
+  var driveRouteId   = null;
+  var WARN_THRESHOLDS = [3000, 1000, 500, 200];
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    var R    = 6371000;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a    = Math.sin(dLat/2) * Math.sin(dLat/2) +
+               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+               Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function speakWarning(text) {
+    if (driveMuted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang   = 'en-ZA';
+    u.rate   = 0.92;
+    u.volume = 1;
+    var voices = window.speechSynthesis.getVoices();
+    var voice  = voices.find(function(v) { return v.lang === 'en-ZA'; }) ||
+                 voices.find(function(v) { return v.lang.startsWith('en'); });
+    if (voice) u.voice = voice;
+    window.speechSynthesis.speak(u);
+  }
+
+  function buildSpokenWarning(step, distM) {
+    var dist = distM >= 1000
+      ? Math.round(distM / 1000) + ' kilometre' + (distM >= 2000 ? 's' : '')
+      : Math.round(distM / 100) * 100 + ' metres';
+    if (distM <= 200) return 'Now. ' + step.instruction + '. Lane ' + (step.laneRecommended + 1) + '.';
+    return 'In ' + dist + '. ' + step.instruction + '. Be in lane ' + (step.laneRecommended + 1) + ' of ' + step.laneTotal + '.';
+  }
+
+  function renderDriveHUD(step, idx, total) {
+    document.getElementById('dm-counter').textContent   = 'Step ' + (idx + 1) + ' of ' + total;
+    document.getElementById('dm-progress').style.width  = Math.round((idx / total) * 100) + '%';
+    document.getElementById('dm-next-title').textContent = step.title;
+    document.getElementById('dm-next-instr').textContent = step.instruction;
+    document.getElementById('dm-landmark').textContent  = 'Look for: ' + step.landmark;
+
+    var lanes = '';
+    for (var i = 0; i < step.laneTotal; i++) {
+      var a = (i === step.laneRecommended);
+      lanes += '<div style="flex:1; height:56px; background-color:' + (a ? '#FF6B35' : '#2a0e00') +
+        '; border-radius:7px; border:2px solid ' + (a ? '#FFF8F0' : '#C1440E') +
+        '; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:' + (a ? '22px' : '15px') +
+        '; color:' + (a ? '#FFF8F0' : '#A0522D') + ';">' + (a ? '&#10003;' : (i + 1)) + '</div>';
+    }
+    document.getElementById('dm-lanes').innerHTML = lanes;
+    document.getElementById('dm-lane-label').textContent = 'Lane ' + (step.laneRecommended + 1) + ' of ' + step.laneTotal;
+  }
+
+  function flashWarningBanner(text, distM) {
+    var banner = document.getElementById('dm-warning');
+    var label  = document.getElementById('dm-warning-text');
+    label.textContent = (distM <= 200 ? '\uD83D\uDEA8 ' : distM <= 500 ? '\u26A0\uFE0F ' : '\uD83D\uDCE2 ') + text;
+    banner.style.display          = 'block';
+    banner.style.backgroundColor  = distM <= 200 ? '#C1440E' : '#FF6B35';
+    clearTimeout(banner._t);
+    banner._t = setTimeout(function() { banner.style.display = 'none'; }, 5000);
+  }
+
+  function onGPSPosition(pos) {
+    var lat      = pos.coords.latitude;
+    var lon      = pos.coords.longitude;
+    var speedKmh = pos.coords.speed != null ? Math.round(pos.coords.speed * 3.6) : '--';
+
+    document.getElementById('dm-speed').textContent = speedKmh;
+    var gpsStatus = document.getElementById('dm-gps-status');
+    if (gpsStatus) gpsStatus.style.display = 'none';
+
+    var route = ROUTES[driveRouteId];
+    if (!route || driveStepIdx >= route.steps.length) return;
+
+    var step = route.steps[driveStepIdx];
+
+    if (!step.location) {
+      // Preset route without GPS waypoints — show step info, no distance countdown
+      renderDriveHUD(step, driveStepIdx, route.steps.length);
+      document.getElementById('dm-distance').textContent = '--';
+      document.getElementById('dm-dist-label').textContent = 'GPS waypoints loading...';
+      return;
+    }
+
+    var distM = haversine(lat, lon, step.location.lat, step.location.lon);
+
+    // Distance display
+    document.getElementById('dm-distance').textContent =
+      distM >= 1000 ? (distM / 1000).toFixed(1) + ' km' : Math.round(distM) + ' m';
+    document.getElementById('dm-dist-label').textContent = 'to next exit';
+
+    renderDriveHUD(step, driveStepIdx, route.steps.length);
+
+    // Threshold warnings
+    if (!driveWarned[driveStepIdx]) driveWarned[driveStepIdx] = {};
+    WARN_THRESHOLDS.forEach(function(thresh) {
+      if (distM <= thresh && !driveWarned[driveStepIdx][thresh]) {
+        driveWarned[driveStepIdx][thresh] = true;
+        var spoken  = buildSpokenWarning(step, thresh);
+        speakWarning(spoken);
+        flashWarningBanner(spoken, thresh);
+        triggerHaptic(thresh, step);
+        if (typeof flashARWarning === 'function') flashARWarning(spoken, thresh);
+      }
+    });
+
+    // Auto-advance when within 40 m of the maneuver point
+    if (distM < 40 && driveStepIdx < route.steps.length - 1) {
+      driveStepIdx++;
+      driveWarned[driveStepIdx] = {};
+      var next = route.steps[driveStepIdx];
+      if (next.type === 'destination') {
+        speakWarning('You have arrived at your destination. Well done.');
+        stopDriveMode();
+      } else {
+        speakWarning('Next: ' + next.instruction);
+      }
+    }
+
+    // Keep AR HUD in sync if AR view is active
+    arLastDist = distM;
+    syncARHUD();
+  }
+
+  function toggleMute() {
+    driveMuted = !driveMuted;
+    var btn = document.getElementById('dm-mute-btn');
+    if (driveMuted) {
+      window.speechSynthesis.cancel();
+      btn.textContent      = '\uD83D\uDD07 Audio OFF — tap to unmute';
+      btn.style.borderColor = '#A0522D';
+      btn.style.color       = '#A0522D';
+    } else {
+      btn.textContent       = '\uD83D\uDD0A Audio ON — tap to mute';
+      btn.style.borderColor = '#FF6B35';
+      btn.style.color       = '#FAE8D3';
+    }
+  }
+
+  function stopDriveMode() {
+    if (driveWatchId !== null) {
+      navigator.geolocation.clearWatch(driveWatchId);
+      driveWatchId = null;
+    }
+    window.speechSynthesis.cancel();
+    if (driveRouteId && ROUTES[driveRouteId]) {
+      showPostDriveForm(driveRouteId);
+    } else {
+      showScreen('overview');
+    }
+  }
+
+  function prepareDriveMode(routeId) {
+    var route = ROUTES[routeId];
+    if (!route) return;
+
+    // Dynamic OSRM routes already have GPS locations — launch directly
+    if (route.steps.some(function(s) { return s.location; })) {
+      launchDriveMode(routeId);
+      return;
+    }
+
+    // Preset routes: fetch GPS waypoints from OSRM then launch
+    var msgEl = document.getElementById('loading-msg');
+    showScreen('loading');
+    if (msgEl) msgEl.textContent = 'Fetching GPS waypoints for your route...';
+
+    Promise.all([geocodePlace(route.from), geocodePlace(route.to)])
+      .then(function(coords) {
+        return fetchOSRMRoute(coords[0], coords[1]).then(function(osrmRoute) {
+          // Collect interesting OSRM steps
+          var osrmAll = [];
+          osrmRoute.legs.forEach(function(leg) { leg.steps.forEach(function(s) { osrmAll.push(s); }); });
+          var interesting = osrmAll.filter(function(s) {
+            var t = s.maneuver.type;
+            return t === 'depart' || t === 'arrive' || t === 'off ramp' ||
+                   t === 'on ramp' || t === 'fork' || t === 'roundabout' || s.distance > 4000;
+          });
+          // Attach locations to preset steps by proportional mapping
+          route.steps.forEach(function(step, i) {
+            var src = interesting[i] || osrmAll[Math.floor(i * osrmAll.length / route.steps.length)];
+            if (src && src.maneuver && src.maneuver.location) {
+              step.location = { lat: src.maneuver.location[1], lon: src.maneuver.location[0] };
+            }
+          });
+          launchDriveMode(routeId);
+        });
+      })
+      .catch(function() {
+        // If OSRM fails, still launch — distance counter just won't show
+        launchDriveMode(routeId);
+      });
+  }
+
+  function launchDriveMode(routeId) {
+    if (!navigator.geolocation) {
+      alert('Drive Mode needs location access. Enable GPS in your browser settings and try again.');
+      showScreen('overview');
+      return;
+    }
+
+    driveRouteId = routeId;
+    driveStepIdx = 0;
+    driveWarned  = {};
+    driveMuted   = false;
+
+    var route = ROUTES[routeId];
+    showScreen('drive');
+
+    // Render first step
+    if (route.steps.length) renderDriveHUD(route.steps[0], 0, route.steps.length);
+
+    // Update header
+    document.getElementById('dm-route-label').textContent = route.from + ' \u2192 ' + route.to;
+
+    // Reset mute button
+    var btn = document.getElementById('dm-mute-btn');
+    if (btn) {
+      btn.textContent       = '\uD83D\uDD0A Audio ON \u2014 tap to mute';
+      btn.style.borderColor = '#FF6B35';
+      btn.style.color       = '#FAE8D3';
+    }
+
+    // Speak intro — delay slightly so voices are loaded
+    setTimeout(function() {
+      speakWarning('Drive Mode started. Route to ' + route.to + '. ' +
+        route.steps.length + ' steps. First: ' + route.steps[0].instruction);
+    }, 600);
+
+    // Start GPS watch
+    driveWatchId = navigator.geolocation.watchPosition(
+      onGPSPosition,
+      function(err) {
+        var el = document.getElementById('dm-gps-status');
+        if (el) {
+          el.style.display    = 'block';
+          el.textContent      = 'GPS error: ' + (err.message || 'access denied') + '. Check your browser location settings.';
+          el.style.color      = '#FF6B35';
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // AR CAMERA VIEW
+  // ─────────────────────────────────────────
+
+  var arAnimFrame = null;
+  var arStream    = null;
+  var arLastDist  = null;
+
+  // Resize canvas to fill screen
+  function resizeARCanvas() {
+    var c = document.getElementById('ar-canvas');
+    if (!c) return;
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeARCanvas);
+  window.addEventListener('orientationchange', function() { setTimeout(resizeARCanvas, 350); });
+
+  // Sync AR bottom HUD with current drive state
+  function syncARHUD() {
+    var arEl = document.getElementById('s-ar');
+    if (!arEl || arEl.style.display === 'none') return;
+    var route = ROUTES[driveRouteId];
+    if (!route) return;
+    var step = route.steps[driveStepIdx];
+    if (!step) return;
+
+    document.getElementById('ar-route-label').textContent  = route.from + ' \u2192 ' + route.to;
+    document.getElementById('ar-counter').textContent      = 'Step ' + (driveStepIdx + 1) + ' of ' + route.steps.length;
+    document.getElementById('ar-next-title').textContent   = step.title;
+    document.getElementById('ar-landmark').textContent     = 'Look for: ' + step.landmark;
+
+    if (arLastDist != null) {
+      document.getElementById('ar-distance').textContent =
+        arLastDist >= 1000 ? (arLastDist / 1000).toFixed(1) + ' km' : Math.round(arLastDist) + ' m';
+    }
+  }
+
+  // Flash warning on AR screen
+  function flashARWarning(text, distM) {
+    var banner = document.getElementById('ar-warning');
+    var label  = document.getElementById('ar-warning-text');
+    if (!banner || !label) return;
+    label.textContent             = (distM <= 200 ? '\uD83D\uDEA8 ' : distM <= 500 ? '\u26A0\uFE0F ' : '\uD83D\uDCE2 ') + text;
+    banner.style.display          = 'block';
+    banner.style.backgroundColor  = distM <= 200 ? 'rgba(193,68,14,0.95)' : 'rgba(255,107,53,0.92)';
+    clearTimeout(banner._t);
+    banner._t = setTimeout(function() { banner.style.display = 'none'; }, 5000);
+  }
+
+  // ── CANVAS DRAWING ──────────────────────
+
+  function drawForwardArrow(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle   = color;
+    ctx.strokeStyle = 'rgba(255,248,240,0.7)';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0,           -size);
+    ctx.lineTo( size * 0.55, size * 0.25);
+    ctx.lineTo( size * 0.2,  0);
+    ctx.lineTo( size * 0.2,  size * 0.55);
+    ctx.lineTo(-size * 0.2,  size * 0.55);
+    ctx.lineTo(-size * 0.2,  0);
+    ctx.lineTo(-size * 0.55, size * 0.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawARFrame(timestamp) {
+    // Stop loop if AR screen is hidden
+    var arEl = document.getElementById('s-ar');
+    if (!arEl || arEl.style.display === 'none') { arAnimFrame = null; return; }
+
+    var canvas = document.getElementById('ar-canvas');
+    if (!canvas) return;
+    var w   = canvas.width;
+    var h   = canvas.height;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    var route = ROUTES[driveRouteId];
+    var step  = route && route.steps[driveStepIdx];
+    if (!step) { arAnimFrame = requestAnimationFrame(drawARFrame); return; }
+
+    var N   = step.laneTotal;
+    var rec = step.laneRecommended;
+
+    // Perspective parameters
+    var vpY   = h * 0.36;           // horizon y
+    var vpX   = w * 0.50;           // horizon x (centre)
+    var rHW   = 45;                 // road half-width at horizon (px)
+    var rBW   = w * 0.54;          // road half-width at bottom
+
+    // Compute lane boundary x at horizon or bottom
+    function bx(i, atH) {
+      return atH
+        ? vpX - rHW + (i / N) * (rHW * 2)
+        : vpX - rBW + (i / N) * (rBW * 2);
+    }
+
+    // Road tint (bottom half darker to make lanes pop against tarmac)
+    var roadGrad = ctx.createLinearGradient(0, vpY, 0, h);
+    roadGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    roadGrad.addColorStop(1, 'rgba(0,0,0,0.32)');
+    ctx.fillStyle = roadGrad;
+    ctx.fillRect(0, vpY, w, h - vpY);
+
+    // Lane fills
+    for (var i = 0; i < N; i++) {
+      var x0b = bx(i,   false), x1b = bx(i + 1, false);
+      var x0h = bx(i,   true),  x1h = bx(i + 1, true);
+      ctx.beginPath();
+      ctx.moveTo(x0b, h); ctx.lineTo(x0h, vpY);
+      ctx.lineTo(x1h, vpY); ctx.lineTo(x1b, h);
+      ctx.closePath();
+      if (i === rec) {
+        var lg = ctx.createLinearGradient(0, vpY, 0, h);
+        lg.addColorStop(0, 'rgba(255,107,53,0.08)');
+        lg.addColorStop(1, 'rgba(255,107,53,0.42)');
+        ctx.fillStyle = lg;
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      }
+      ctx.fill();
+    }
+
+    // Lane boundary lines
+    for (var i = 0; i <= N; i++) {
+      var xb = bx(i, false), xh = bx(i, true);
+      ctx.beginPath();
+      ctx.moveTo(xb, h); ctx.lineTo(xh, vpY);
+      var isEdge = (i === 0 || i === N);
+      var isRecB = (i === rec || i === rec + 1);
+      ctx.strokeStyle = isRecB ? 'rgba(255,107,53,0.92)' : isEdge ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.35)';
+      ctx.lineWidth   = isRecB ? 3 : isEdge ? 2 : 1.5;
+      if (!isEdge && !isRecB) ctx.setLineDash([18, 14]);
+      else ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Pulsing forward arrow in recommended lane
+    var pulse    = 1 + 0.10 * Math.sin(timestamp / 380);
+    var arrowFrac = 0.52;  // 52% from horizon to bottom
+    var lbx      = bx(rec,     false), rbx = bx(rec + 1, false);
+    var lhx      = bx(rec,     true),  rhx = bx(rec + 1, true);
+    var arrowX   = ((lbx + rbx) / 2) * (1 - arrowFrac) + ((lhx + rhx) / 2) * arrowFrac;
+    var arrowY   = h - (h - vpY) * arrowFrac;
+    var laneW    = Math.abs(rbx - lbx);
+    var arrowSz  = laneW * 0.30 * pulse;
+    drawForwardArrow(ctx, arrowX, arrowY, arrowSz, 'rgba(255,107,53,0.95)');
+
+    // Lane number circles at bottom
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    for (var i = 0; i < N; i++) {
+      var cx = (bx(i, false) + bx(i + 1, false)) / 2;
+      var cy = h - 54;
+      var r  = 20;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle   = i === rec ? '#FF6B35' : 'rgba(42,14,0,0.72)';
+      ctx.fill();
+      ctx.strokeStyle = i === rec ? '#FFF8F0' : 'rgba(255,255,255,0.45)';
+      ctx.lineWidth   = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#FFF8F0';
+      ctx.font      = 'bold 15px system-ui, sans-serif';
+      ctx.fillText(i === rec ? '\u2713' : (i + 1), cx, cy);
+    }
+
+    // Floating distance text near horizon
+    if (arLastDist != null) {
+      var dtxt = arLastDist >= 1000
+        ? (arLastDist / 1000).toFixed(1) + ' km'
+        : Math.round(arLastDist) + ' m';
+      var dtx = w / 2, dty = vpY + (h - vpY) * 0.22;
+      ctx.font         = 'bold 26px system-ui, sans-serif';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      // Drop shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillText(dtxt, dtx + 2, dty + 2);
+      // Text
+      ctx.fillStyle = '#FF6B35';
+      ctx.fillText(dtxt, dtx, dty);
+    }
+
+    // "Approaching exit" pulse overlay when very close
+    if (arLastDist != null && arLastDist <= 500) {
+      var alpha = (1 - arLastDist / 500) * 0.18;
+      ctx.fillStyle = 'rgba(255,107,53,' + alpha.toFixed(3) + ')';
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    arAnimFrame = requestAnimationFrame(drawARFrame);
+  }
+
+  // ── AR LIFECYCLE ──────────────────────────
+
+  function switchToARView() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('AR Camera View needs a device with a camera and a modern browser (Chrome / Safari on mobile).');
+      return;
+    }
+    resizeARCanvas();
+    // Show AR screen (GPS watch keeps running from Drive Mode)
+    document.getElementById('s-drive').style.display = 'none';
+    document.getElementById('s-ar').style.display    = 'block';
+    syncARHUD();
+
+    // Start camera
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    })
+    .then(function(stream) {
+      arStream = stream;
+      var video = document.getElementById('ar-video');
+      video.srcObject = stream;
+      video.play().catch(function() {});
+      // Start draw loop
+      if (!arAnimFrame) arAnimFrame = requestAnimationFrame(drawARFrame);
+    })
+    .catch(function(err) {
+      var errEl  = document.getElementById('ar-cam-error');
+      var msgEl  = document.getElementById('ar-cam-error-msg');
+      if (errEl) errEl.style.display = 'block';
+      if (msgEl) msgEl.textContent   =
+        err.name === 'NotAllowedError'
+          ? 'Camera permission was denied. Allow camera access in your browser settings, then try again.'
+          : 'Could not start camera: ' + (err.message || err.name) + '. Check that no other app is using it.';
+    });
+  }
+
+  function switchToDriveHUD() {
+    stopARCamera();
+    document.getElementById('s-ar').style.display    = 'none';
+    document.getElementById('s-drive').style.display = 'block';
+  }
+
+  function stopARCamera() {
+    if (arAnimFrame) { cancelAnimationFrame(arAnimFrame); arAnimFrame = null; }
+    if (arStream) {
+      arStream.getTracks().forEach(function(t) { t.stop(); });
+      arStream = null;
+    }
+    var video = document.getElementById('ar-video');
+    if (video) { video.srcObject = null; }
+  }
+
+  function stopARMode() {
+    stopARCamera();
+    stopDriveMode();  // also kills GPS watch + speech
+  }
+
+  function toggleMuteAR() {
+    driveMuted = !driveMuted;
+    var btn = document.getElementById('ar-mute-btn');
+    if (driveMuted) {
+      window.speechSynthesis.cancel();
+      if (btn) { btn.textContent = '\uD83D\uDD07 Audio OFF'; btn.style.borderColor = '#A0522D'; }
+    } else {
+      if (btn) { btn.textContent = '\uD83D\uDD0A Audio ON'; btn.style.borderColor = '#FF6B35'; }
+    }
+    // Keep Drive Mode mute button in sync
+    var dmBtn = document.getElementById('dm-mute-btn');
+    if (dmBtn) {
+      dmBtn.textContent       = driveMuted ? '\uD83D\uDD07 Audio OFF \u2014 tap to unmute' : '\uD83D\uDD0A Audio ON \u2014 tap to mute';
+      dmBtn.style.borderColor = driveMuted ? '#A0522D' : '#FF6B35';
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // HAPTIC SMARTWATCH WARNINGS
+  // Three channels: phone vibration (mirrors to
+  // most paired watches), Web Notifications
+  // (Apple Watch, Fitbit, Garmin), and direct
+  // BLE via Web Bluetooth (WearOS / bands).
+  // ─────────────────────────────────────────
+
+  var hapticEnabled = true;
+  var watchType     = 'other';
+  var bleDevice     = null;
+  var bleAlertChar  = null;
+
+  // Vibration patterns: [vibrate, pause, vibrate, …] in ms
+  var HAPTIC = {
+    3000: [100, 70, 100, 70, 100],          // 3 short  →  3 km
+    1000: [200, 90, 200],                   // 2 medium →  1 km
+    500:  [380],                            // 1 strong →  500 m
+    200:  [550, 80, 180, 80, 180],          // URGENT   →  200 m
+    next: [150, 70, 150],                   // next step advanced
+    test: [100,50,100,50,100,90,
+           200,90,200,90,380,90,
+           550,80,180,80,180]               // all patterns in one demo
+  };
+
+  function vibratePhone(pattern) {
+    if (!hapticEnabled) return;
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  }
+
+  function sendBLEAlert(level) {
+    if (!bleAlertChar) return;
+    bleAlertChar.writeValue(new Uint8Array([level])).catch(function() {});
+  }
+
+  function sendNotifAlert(title, body) {
+    if (!window.Notification || Notification.permission !== 'granted') return;
+    try {
+      var n = new Notification(title, {
+        body:     body,
+        tag:      'exitsa-haptic',
+        renotify: true,
+        silent:   false
+      });
+      setTimeout(function() { n.close(); }, 4000);
+    } catch (e) {}
+  }
+
+  // Master haptic trigger — called at every distance threshold
+  function triggerHaptic(distM, step) {
+    if (!hapticEnabled) return;
+    var pattern = HAPTIC[distM] || HAPTIC[200];
+    vibratePhone(pattern);
+    sendBLEAlert(distM <= 200 ? 2 : 1);  // 2 = high alert, 1 = mild
+    if (distM <= 1000) {
+      var title = distM <= 200 ? '\uD83D\uDEA8 EXIT NOW' : '\u26A0\uFE0F ExitSA Warning';
+      var body  = step
+        ? (distM >= 1000
+            ? 'In 1 km: ' + step.title + ' \u2014 Lane ' + (step.laneRecommended + 1)
+            : distM >= 500
+            ? 'In 500 m: ' + step.title
+            : 'Exit NOW \u2014 ' + step.title)
+        : 'Approach warning';
+      sendNotifAlert(title, body);
+    }
+    // Update haptic button badge to show activity
+    updateHapticBtnFeedback(distM);
+  }
+
+  function updateHapticBtnFeedback(distM) {
+    var btn = document.getElementById('dm-haptic-btn');
+    if (!btn) return;
+    var orig = btn.textContent;
+    btn.textContent       = distM <= 200 ? '\uD83D\uDEA8 VIBRATING' : '\u26A0\uFE0F Vibrating';
+    btn.style.borderColor = '#FF6B35';
+    clearTimeout(btn._rt);
+    btn._rt = setTimeout(function() {
+      btn.textContent       = hapticEnabled ? '\u231B Haptics ON' : '\u231B Haptics OFF';
+      btn.style.borderColor = hapticEnabled ? '#FF6B35' : '#A0522D';
+    }, 1200);
+  }
+
+  // ── PANEL CONTROLS ────────────────────────
+
+  function showHapticPanel() {
+    document.getElementById('haptic-panel').style.display = 'block';
+    updateNotifStatus();
+    setWatchType(watchType); // refresh guide
+  }
+
+  function hideHapticPanel() {
+    document.getElementById('haptic-panel').style.display = 'none';
+  }
+
+  function toggleHaptics() {
+    hapticEnabled = !hapticEnabled;
+    var btn = document.getElementById('haptic-toggle-btn');
+    if (btn) {
+      btn.textContent       = hapticEnabled ? 'ON' : 'OFF';
+      btn.style.backgroundColor = hapticEnabled ? '#FF6B35' : '#3D1A00';
+      btn.style.border      = hapticEnabled ? 'none' : '2px solid #A0522D';
+      btn.style.color       = hapticEnabled ? '#FFF8F0' : '#A0522D';
+    }
+    var dmBtn = document.getElementById('dm-haptic-btn');
+    if (dmBtn) {
+      dmBtn.textContent       = hapticEnabled ? '\u231B Haptics ON' : '\u231B Haptics OFF';
+      dmBtn.style.borderColor = hapticEnabled ? '#FF6B35' : '#A0522D';
+      dmBtn.style.color       = hapticEnabled ? '#FAE8D3' : '#A0522D';
+    }
+    if (hapticEnabled) vibratePhone([100, 50, 100]); // confirm vibration
+  }
+
+  function testHaptic() {
+    if (!navigator.vibrate) {
+      alert("Vibration isn\u2019t supported on this browser. On iPhone, add ExitSA to your Home Screen and try again. On desktop, haptics fire on your paired watch via notifications.");
+      return;
+    }
+    vibratePhone(HAPTIC.test);
+  }
+
+  // ── WATCH TYPE ────────────────────────────
+
+  var WATCH_GUIDES = {
+    apple: {
+      title: '\u63A7 Apple Watch setup',
+      steps: [
+        'Method 1 \u2014 Mirror iPhone (recommended): Open the Watch app on your iPhone \u2192 My Watch \u2192 Sounds & Haptics \u2192 turn on \u201CMirror iPhone\u201D. ExitSA vibrations will mirror instantly.',
+        'Method 2 \u2014 Notifications: Tap "Enable notifications" below. Each warning will appear as a notification on your Apple Watch with haptic tap.',
+        'For best results use both methods together.'
+      ],
+      notif: true, bt: false
+    },
+    weaeros: {
+      title: '\u2600 Wear OS setup',
+      steps: [
+        'No setup needed! WearOS automatically mirrors Android phone vibrations.',
+        'Open the Wear OS app on your phone \u2192 Advanced Settings \u2192 Make sure Notifications sync is on.',
+        'Phone haptics will vibrate your watch instantly at each ExitSA warning.'
+      ],
+      notif: false, bt: true
+    },
+    samsung: {
+      title: '\u25A6 Samsung Galaxy Watch setup',
+      steps: [
+        'Open the Galaxy Wearable app \u2192 watch settings \u2192 Sounds and vibration \u2192 ensure Vibration is enabled.',
+        'Phone vibrations mirror to Galaxy Watch automatically via Galaxy Wearable.',
+        'Optionally enable notifications below for extra reliability.'
+      ],
+      notif: true, bt: true
+    },
+    fitbit: {
+      title: '\u2744 Fitbit setup',
+      steps: [
+        'Fitbit doesn\u2019t mirror raw phone vibrations.',
+        'Open Fitbit app \u2192 your device tile \u2192 Notifications \u2192 enable notifications for your browser (Chrome or Safari).',
+        'Then tap "Enable notifications" below so ExitSA warnings reach your Fitbit.'
+      ],
+      notif: true, bt: false
+    },
+    garmin: {
+      title: '\u25CE Garmin setup',
+      steps: [
+        'Open Garmin Connect app \u2192 your device \u2192 Smart Notifications \u2192 turn on.',
+        'Enable your browser in Garmin\u2019s notification allow-list.',
+        'Then tap "Enable notifications" below. Garmin will receive every ExitSA exit warning.'
+      ],
+      notif: true, bt: false
+    },
+    other: {
+      title: '\u231B Any smartwatch',
+      steps: [
+        'If your watch is paired to your Android phone via Bluetooth, it will receive phone vibrations automatically.',
+        'For iPhone-paired watches, enable notifications below so warnings reach your watch via the notification system.',
+        'Web Bluetooth pairing (below) works with some BLE fitness bands for direct instant alerts.'
+      ],
+      notif: true, bt: true
+    }
+  };
+
+  function setWatchType(type) {
+    watchType = type;
+    var ids = ['apple','weaeros','samsung','fitbit','garmin','other'];
+    ids.forEach(function(id) {
+      var btn = document.getElementById('wt-' + id);
+      if (!btn) return;
+      if (id === type) {
+        btn.style.borderColor     = '#FF6B35';
+        btn.style.backgroundColor = '#C1440E';
+        btn.style.color           = '#FFF8F0';
+      } else {
+        btn.style.borderColor     = '#F7931E';
+        btn.style.backgroundColor = '#3D1A00';
+        btn.style.color           = '#FAE8D3';
+      }
+    });
+
+    var guide = WATCH_GUIDES[type] || WATCH_GUIDES.other;
+    var guideEl = document.getElementById('watch-guide');
+    if (guideEl) {
+      guideEl.innerHTML =
+        '<div style="font-size:13px; font-weight:700; color:#FF6B35; margin-bottom:10px;">' + guide.title + '</div>' +
+        guide.steps.map(function(s, i) {
+          return '<div style="display:flex; gap:10px; margin-bottom:8px;">' +
+            '<div style="flex-shrink:0; width:20px; height:20px; background:#FF6B35; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#FFF8F0; margin-top:1px;">' + (i + 1) + '</div>' +
+            '<div style="font-size:13px; color:#FAE8D3; line-height:1.55;">' + s + '</div>' +
+          '</div>';
+        }).join('');
+    }
+
+    // Show/hide notification section based on watch type
+    var notifSection = document.getElementById('notif-section');
+    if (notifSection) notifSection.style.display = guide.notif ? 'block' : 'none';
+  }
+
+  // ── NOTIFICATIONS ─────────────────────────
+
+  function updateNotifStatus() {
+    var el = document.getElementById('notif-status');
+    if (!el) return;
+    if (!window.Notification) {
+      el.textContent = 'Notifications not available in this browser.';
+    } else if (Notification.permission === 'granted') {
+      el.textContent = '\u2713 Notifications enabled \u2014 your watch will receive exit alerts.';
+      el.style.color = '#FF6B35';
+    } else if (Notification.permission === 'denied') {
+      el.textContent = 'Permission denied. Open browser Settings \u2192 Site settings \u2192 Notifications \u2192 allow ExitSA.';
+      el.style.color = '#C1440E';
+    } else {
+      el.textContent = 'Not yet enabled. Tap the button above.';
+      el.style.color = '#A0522D';
+    }
+  }
+
+  function requestNotifPermission() {
+    if (!window.Notification) {
+      document.getElementById('notif-status').textContent = 'Notifications not supported. Try Chrome on Android or Safari on iOS 16.4+.';
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      sendNotifAlert('\u231B ExitSA Haptics', 'Notifications working! Your watch will feel every exit warning.');
+      updateNotifStatus();
+      return;
+    }
+    Notification.requestPermission().then(function(perm) {
+      updateNotifStatus();
+      if (perm === 'granted') {
+        sendNotifAlert('\u231B ExitSA Haptics', 'All set! Your watch will feel every exit warning.');
+      }
+    });
+  }
+
+  // ── WEB BLUETOOTH ─────────────────────────
+
+  function connectBluetooth() {
+    var statusEl  = document.getElementById('bt-status');
+    var connectBtn = document.getElementById('bt-connect-btn');
+
+    // Disconnect if already connected
+    if (bleDevice && bleDevice.gatt.connected) {
+      bleDevice.gatt.disconnect();
+      bleDevice = bleAlertChar = null;
+      if (connectBtn) connectBtn.textContent = '\uD83D\uDD0C Pair smartwatch via Bluetooth';
+      if (statusEl)   statusEl.textContent   = 'Disconnected.';
+      return;
+    }
+
+    if (!navigator.bluetooth) {
+      if (statusEl) statusEl.textContent = 'Web Bluetooth requires Chrome on Android. Not available on iOS or Firefox.';
+      return;
+    }
+
+    if (statusEl) statusEl.textContent = 'Opening Bluetooth picker\u2026';
+
+    navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [
+        'immediate_alert',
+        '00001802-0000-1000-8000-00805f9b34fb',
+        'alert_notification',
+        '00001811-0000-1000-8000-00805f9b34fb'
+      ]
+    })
+    .then(function(device) {
+      bleDevice = device;
+      if (statusEl) statusEl.textContent = 'Connecting to ' + device.name + '\u2026';
+      device.addEventListener('gattserverdisconnected', function() {
+        bleAlertChar = null;
+        if (connectBtn) connectBtn.textContent = '\uD83D\uDD0C Pair smartwatch via Bluetooth';
+        if (statusEl)   statusEl.textContent   = device.name + ' disconnected.';
+      });
+      return device.gatt.connect();
+    })
+    .then(function(server) {
+      // Try Immediate Alert Service first (simpler)
+      return server.getPrimaryService('immediate_alert').catch(function() {
+        return server.getPrimaryService('00001802-0000-1000-8000-00805f9b34fb');
+      });
+    })
+    .then(function(service) {
+      return service.getCharacteristic('alert_level').catch(function() {
+        return service.getCharacteristic('00002a06-0000-1000-8000-00805f9b34fb');
+      });
+    })
+    .then(function(char) {
+      bleAlertChar = char;
+      if (connectBtn) connectBtn.textContent = '\uD83D\uDFE2 ' + bleDevice.name + ' connected \u2014 tap to disconnect';
+      if (statusEl)   statusEl.textContent   = '\u2713 Connected! ExitSA will send direct haptic alerts to ' + bleDevice.name + '.';
+      if (statusEl)   statusEl.style.color   = '#FF6B35';
+      // Test it
+      sendBLEAlert(1);
+    })
+    .catch(function(err) {
+      bleDevice = bleAlertChar = null;
+      var msg = err.name === 'NotFoundError'
+        ? 'No device selected.'
+        : err.name === 'NotSupportedError'
+        ? 'This watch doesn\u2019t expose a writable alert service. Try the notification method instead.'
+        : (err.message || err.name || 'Bluetooth error');
+      if (statusEl) { statusEl.textContent = msg; statusEl.style.color = '#C1440E'; }
+    });
+  }
+
+  // ─────────────────────────────────────────
+  // COMMUNITY TIPS — localStorage store
+  // ─────────────────────────────────────────
+
+  var postDriveRatings = {};  // { stepIdx: { rating, text } } — in-progress form state
+
+  var RATINGS = {
+    easy:   { label: 'Easy',        icon: '\u2705', color: '#F7931E' },
+    tricky: { label: 'Tricky',      icon: '\u26A0\uFE0F', color: '#FF6B35' },
+    missed: { label: 'Missed it',   icon: '\uD83D\uDEA8', color: '#C1440E' }
+  };
+
+  function getAllCommunityTips() {
+    try { return JSON.parse(localStorage.getItem('exitsa-tips') || '{}'); }
+    catch(e) { return {}; }
+  }
+
+  function saveAllCommunityTips(data) {
+    try { localStorage.setItem('exitsa-tips', JSON.stringify(data)); } catch(e) {}
+  }
+
+  // Returns HTML for community tips to inject into a briefing slide
+  function renderCommunityTipsForStep(routeId, stepIdx) {
+    var all   = getAllCommunityTips();
+    var tips  = (all[routeId] && all[routeId][stepIdx]) || [];
+    if (!tips.length) return '';
+
+    var html = '<div style="margin-bottom:20px;">' +
+      '<div style="font-size:11px; font-weight:700; color:#A0522D; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">&#128101; Community tips (' + tips.length + ')</div>';
+
+    tips.forEach(function(tip) {
+      var r = RATINGS[tip.rating] || {};
+      html +=
+        '<div style="background-color:#FAE8D3; border-radius:8px; padding:12px 14px; margin-bottom:8px; border-left:4px solid ' + (r.color || '#F7931E') + ';">' +
+          (tip.rating
+            ? '<span style="font-size:11px; font-weight:700; color:' + (r.color || '#A0522D') + '; text-transform:uppercase; letter-spacing:0.4px; margin-right:6px;">' + (r.icon || '') + ' ' + (r.label || tip.rating) + '</span>'
+            : '') +
+          '<p style="font-size:0.88rem; color:#3D1A00; margin:4px 0 6px; line-height:1.5; font-style:italic;">&ldquo;' + escHtml(tip.text) + '&rdquo;</p>' +
+          '<div style="font-size:12px; color:#A0522D; font-weight:600;">' +
+            '— ' + escHtml(tip.author || 'Anonymous driver') +
+            ' &nbsp;&#183;&nbsp; <span style="font-weight:400;">' + formatTipAge(tip.ts) + '</span>' +
+          '</div>' +
+        '</div>';
+    });
+
+    return html + '</div>';
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatTipAge(ts) {
+    if (!ts) return '';
+    var diff = Date.now() - ts;
+    var days = Math.floor(diff / 86400000);
+    if (days === 0) return 'today';
+    if (days === 1) return 'yesterday';
+    if (days < 30)  return days + ' days ago';
+    if (days < 365) return Math.floor(days / 30) + ' months ago';
+    return Math.floor(days / 365) + ' year' + (days >= 730 ? 's' : '') + ' ago';
+  }
+
+  // ─────────────────────────────────────────
+  // POST-DRIVE FORM
+  // ─────────────────────────────────────────
+
+  function showPostDriveForm(routeId) {
+    var route = ROUTES[routeId];
+    if (!route) { showScreen('overview'); return; }
+
+    postDriveRatings = {};
+
+    // Route label in header
+    var labelEl = document.getElementById('pd-route-label');
+    if (labelEl) labelEl.textContent = route.from + ' \u2192 ' + route.to + '  \u00B7  ' + route.distance;
+
+    // Restore saved nickname
+    var savedAuthor = '';
+    try { savedAuthor = localStorage.getItem('exitsa-author') || ''; } catch(e) {}
+    var authorEl = document.getElementById('pd-author');
+    if (authorEl) authorEl.value = savedAuthor;
+
+    // Build step cards — show all steps, highlight critical/exit ones
+    var stepsEl = document.getElementById('pd-steps');
+    if (!stepsEl) { showScreen('post-drive'); return; }
+
+    stepsEl.innerHTML = route.steps.map(function(step, idx) {
+      var isCrit = step.type === 'critical' || step.type === 'exit';
+      return (
+        '<div id="pd-card-' + idx + '" style="background:#FAE8D3; border-radius:12px; padding:16px 18px; margin-bottom:12px; border:2px solid ' + (isCrit ? '#C1440E' : '#F7931E') + ';">' +
+
+          // Step header
+          '<div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;">' +
+            '<div style="width:28px; height:28px; border-radius:50%; background:' + (isCrit ? '#C1440E' : '#FF6B35') + '; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#FFF8F0; flex-shrink:0;">' + (idx + 1) + '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:14px; font-weight:700; color:' + (isCrit ? '#C1440E' : '#3D1A00') + '; line-height:1.3; margin-bottom:2px;">' + escHtml(step.title) + '</div>' +
+              '<div style="font-size:12px; color:#A0522D;">' + escHtml(step.instruction.substring(0, 70)) + (step.instruction.length > 70 ? '…' : '') + '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // Rating buttons
+          '<div style="display:flex; gap:8px; margin-bottom:0;" id="pd-ratings-' + idx + '">' +
+            Object.keys(RATINGS).map(function(key) {
+              var r = RATINGS[key];
+              return '<button onclick="selectRating(' + idx + ',\'' + key + '\')" id="pd-r-' + idx + '-' + key + '" ' +
+                'style="flex:1; background:#FFF8F0; color:#3D1A00; border:2px solid #F7931E; border-radius:8px; padding:10px 4px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.3; min-height:48px;">' +
+                r.icon + '<br/>' + r.label + '</button>';
+            }).join('') +
+          '</div>' +
+
+          // Tip textarea (hidden until rating tapped)
+          '<div id="pd-tip-' + idx + '" style="display:none; margin-top:10px;">' +
+            '<textarea id="pd-text-' + idx + '" placeholder="Got a tip? What surprised you here? (optional)" ' +
+              'style="background:#FFF8F0; border:2px solid #F7931E; border-radius:8px; padding:10px 12px; font-size:14px; color:#3D1A00; width:100%; box-sizing:border-box; font-family:inherit; resize:none; outline:none; min-height:72px;"></textarea>' +
+          '</div>' +
+
+        '</div>'
+      );
+    }).join('');
+
+    showScreen('post-drive');
+  }
+
+  function selectRating(stepIdx, rating) {
+    postDriveRatings[stepIdx] = postDriveRatings[stepIdx] || {};
+    postDriveRatings[stepIdx].rating = rating;
+
+    // Update button styles
+    Object.keys(RATINGS).forEach(function(key) {
+      var btn = document.getElementById('pd-r-' + stepIdx + '-' + key);
+      if (!btn) return;
+      var r = RATINGS[key];
+      if (key === rating) {
+        btn.style.backgroundColor = r.color;
+        btn.style.color           = '#FFF8F0';
+        btn.style.borderColor     = r.color;
+      } else {
+        btn.style.backgroundColor = '#FFF8F0';
+        btn.style.color           = '#3D1A00';
+        btn.style.borderColor     = '#F7931E';
+      }
+    });
+
+    // Show tip textarea on first tap
+    var tipDiv = document.getElementById('pd-tip-' + stepIdx);
+    if (tipDiv) tipDiv.style.display = 'block';
+  }
+
+  function submitCommunityTips() {
+    var author = (document.getElementById('pd-author').value || '').trim() || 'Anonymous driver';
+
+    // Persist nickname for next time
+    try { localStorage.setItem('exitsa-author', author); } catch(e) {}
+
+    var all   = getAllCommunityTips();
+    var route = ROUTES[driveRouteId];
+    if (!all[driveRouteId]) all[driveRouteId] = {};
+
+    var saved = 0;
+    route.steps.forEach(function(step, idx) {
+      var rd = postDriveRatings[idx] || {};
+      if (!rd.rating) return;  // skip unrated steps
+
+      var textEl = document.getElementById('pd-text-' + idx);
+      var text   = textEl ? textEl.value.trim() : '';
+
+      // Always save a rating; save text tip only if non-empty
+      if (!all[driveRouteId][idx]) all[driveRouteId][idx] = [];
+
+      // Don't duplicate within the same session
+      all[driveRouteId][idx].push({
+        text:   text || rd.rating,          // fallback to rating label if no text
+        author: author,
+        rating: rd.rating,
+        ts:     Date.now()
+      });
+      saved++;
+    });
+
+    saveAllCommunityTips(all);
+
+    if (saved === 0) {
+      // Nothing rated — just go home
+      showScreen('home');
+      return;
+    }
+
+    // Show thank-you toast, then navigate home
+    showThanksToast(saved, author);
+  }
+
+  function skipPostDrive() {
+    showScreen(currentRouteId ? 'overview' : 'home');
+  }
+
+  function showThanksToast(count, author) {
+    var toast = document.createElement('div');
+    toast.style.cssText = [
+      'position:fixed', 'bottom:80px', 'left:50%', 'transform:translateX(-50%)',
+      'background:#FF6B35', 'color:#FFF8F0', 'padding:14px 24px',
+      'border-radius:30px', 'font-size:14px', 'font-weight:700',
+      'font-family:system-ui,sans-serif', 'z-index:9999',
+      'box-shadow:0 4px 20px rgba(0,0,0,0.25)', 'white-space:nowrap',
+      'transition:opacity 0.4s ease'
+    ].join(';');
+    toast.textContent = '\u2764 Thanks, ' + author.split(' ')[0] + '! ' + count + ' tip' + (count > 1 ? 's' : '') + ' saved for the next driver.';
+    document.body.appendChild(toast);
+
+    setTimeout(function() { toast.style.opacity = '0'; }, 2800);
+    setTimeout(function() {
+      document.body.removeChild(toast);
+      showScreen('home');
+    }, 3200);
+  }
+
+  // ─────────────────────────────────────────
+  // OFFLINE IMAGE FALLBACK
+  // Generates an inline SVG matching the same
+  // warm palette as placehold.co when the
+  // network image fails to load.
+  // ─────────────────────────────────────────
+
+  function offlineImg(src) {
+    try {
+      var url = new URL(src);
+      var m   = url.pathname.match(/\/(\d+)x(\d+)\/([0-9A-Fa-f]{6})\/([0-9A-Fa-f]{6})/);
+      var w   = m ? m[1] : 800;
+      var h   = m ? m[2] : 360;
+      var bg  = m ? m[3] : 'FAE8D3';
+      var fg  = m ? m[4] : 'C1440E';
+      var raw = url.searchParams.get('text') || 'ExitSA';
+      var txt = decodeURIComponent(raw).replace(/\+/g, ' ').substring(0, 45);
+      var fs  = Math.min(Math.floor(parseInt(w) / 16), 30);
+      var svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+        '<rect width="' + w + '" height="' + h + '" fill="#' + bg + '"/>' +
+        '<text x="' + Math.floor(w / 2) + '" y="' + Math.floor(h / 2) + '"' +
+        ' font-family="system-ui,sans-serif" font-size="' + fs + '" font-weight="600"' +
+        ' fill="#' + fg + '" text-anchor="middle" dominant-baseline="middle">' +
+        txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</text></svg>';
+      return 'data:image/svg+xml,' + encodeURIComponent(svg);
+    } catch(e) {
+      return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // OFFLINE / ONLINE STATUS
+  // ─────────────────────────────────────────
+
+  function updateOfflineBanner() {
+    var b = document.getElementById('offline-banner');
+    if (!b) return;
+    if (!navigator.onLine) {
+      b.style.display = 'block';
+      // Push screens down so banner doesn't cover header
+      document.body.style.paddingTop = b.offsetHeight + 'px';
+    } else {
+      b.style.display = 'none';
+      document.body.style.paddingTop = '0';
+    }
+  }
+
+  window.addEventListener('online',  function() { updateOfflineBanner(); });
+  window.addEventListener('offline', function() { updateOfflineBanner(); });
+
+  // ─────────────────────────────────────────
+  // PWA INSTALL PROMPT
+  // ─────────────────────────────────────────
+
+  var deferredInstallPrompt = null;
+
+  // Android Chrome: browser fires this when PWA criteria are met
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    showInstallBanner('android');
+  });
+
+  // iOS Safari: no beforeinstallprompt — detect and show manual instructions
+  window.addEventListener('load', function() {
+    var isIOS        = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    var dismissed    = false;
+    try { dismissed = !!localStorage.getItem('exitsa-install-dismissed'); } catch(e) {}
+    if (isIOS && !isStandalone && !dismissed) showInstallBanner('ios');
+  });
+
+  function showInstallBanner(platform) {
+    var dismissed = false;
+    try { dismissed = !!localStorage.getItem('exitsa-install-dismissed'); } catch(e) {}
+    if (dismissed) return;
+
+    var banner  = document.getElementById('install-banner');
+    var instrEl = document.getElementById('install-instructions');
+    var btn     = document.getElementById('install-btn');
+    if (!banner || !instrEl) return;
+
+    if (platform === 'ios') {
+      instrEl.textContent = 'Tap the Share button (\u2197) at the bottom of Safari, then tap \u201CAdd to Home Screen\u201D. ExitSA will work fully offline from your home screen.';
+      if (btn) btn.style.display = 'none';
+    } else {
+      instrEl.textContent = 'Install ExitSA on your device for the full offline experience \u2014 works without Wi-Fi, loads instantly, and sits on your home screen like a native app.';
+      if (btn) btn.style.display = 'inline-block';
+    }
+    banner.style.display = 'block';
+  }
+
+  function installApp() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(result) {
+      deferredInstallPrompt = null;
+      document.getElementById('install-banner').style.display = 'none';
+    });
+  }
+
+  function dismissInstall() {
+    document.getElementById('install-banner').style.display = 'none';
+    try { localStorage.setItem('exitsa-install-dismissed', '1'); } catch(e) {}
+  }
+
+  window.addEventListener('appinstalled', function() {
+    document.getElementById('install-banner').style.display = 'none';
+  });
+
+  // ─────────────────────────────────────────
+  // SERVICE WORKER REGISTRATION
+  // ─────────────────────────────────────────
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').then(function(reg) {
+        // Check for updates in the background
+        reg.addEventListener('updatefound', function() {
+          var worker = reg.installing;
+          worker.addEventListener('statechange', function() {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version cached — show a subtle toast
+              showUpdateToast();
+            }
+          });
+        });
+      }).catch(function() {
+        // SW registration failed (file://, older browser) — app still works
+      });
+    });
+  }
+
+  function showUpdateToast() {
+    var t = document.createElement('div');
+    t.style.cssText = [
+      'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
+      'background:#3D1A00', 'color:#FFF8F0', 'padding:12px 20px',
+      'border-radius:24px', 'font-size:13px', 'font-weight:600',
+      'font-family:system-ui,sans-serif', 'z-index:9999',
+      'white-space:nowrap', 'box-shadow:0 4px 20px rgba(0,0,0,0.25)'
+    ].join(';');
+    t.textContent = '\u2B06\uFE0F ExitSA updated \u2014 reload for the latest routes';
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; }, 4000);
+    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 4600);
+  }
+
+  // ─────────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────────
+
+  showScreen('home');
+  renderRouteCards();
+  updateOfflineBanner();
+
+  // Handle shortcut URLs (from manifest shortcuts)
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var routeId = params.get('route');
+    if (routeId && ROUTES[routeId]) loadRoute(routeId);
+  })();
+
+  </script>
+
+</body>
+</html>

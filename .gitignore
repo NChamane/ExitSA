@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Keystores (never commit private keys)
+*.keystore
+*.jks
+
+# Generated APK (produced by CI, not source)
+downloads/*.apk
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+.claude-flow/
