@@ -81,8 +81,19 @@ jobs:
       # ── Rename and copy APK ───────────────────────────────────────────────
       - name: Prepare APK for download
         run: |
-          APK_PATH=$(find android -name "*.apk" | head -1)
-          cp "$APK_PATH" downloads/ExitSA.apk
+          mkdir -p downloads
+          # Gradle puts the signed release APK here
+          EXACT=android/app/build/outputs/apk/release/app-release.apk
+          if [ -f "$EXACT" ]; then
+            cp "$EXACT" downloads/ExitSA.apk
+          else
+            # Fallback: search broadly
+            APK_PATH=$(find android/app/build/outputs -name "*.apk" 2>/dev/null | head -1)
+            if [ -z "$APK_PATH" ]; then
+              echo "No APK found. Listing build outputs:"; find android/app/build -name "*.apk" 2>/dev/null || true; exit 1
+            fi
+            cp "$APK_PATH" downloads/ExitSA.apk
+          fi
           ls -lh downloads/
 
       # ── Upload APK as build artifact ──────────────────────────────────────
