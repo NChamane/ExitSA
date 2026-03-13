@@ -27,6 +27,46 @@
   </div>
 
   <!-- ═══════════════════════════════════════ -->
+  <!-- SPLASH SCREEN (fixed overlay, z:9999)   -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="s-splash" style="position: fixed; inset: 0; z-index: 9999; background: linear-gradient(145deg, #C1440E 0%, #FF6B35 55%, #F7931E 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; overflow: hidden;">
+
+    <!-- Decorative circles -->
+    <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,248,240,0.06);border-radius:50%;pointer-events:none;"></div>
+    <div style="position:absolute;bottom:-70px;left:-40px;width:180px;height:180px;background:rgba(255,248,240,0.04);border-radius:50%;pointer-events:none;"></div>
+    <div style="position:absolute;top:40%;left:-60px;width:120px;height:120px;background:rgba(255,248,240,0.03);border-radius:50%;pointer-events:none;"></div>
+
+    <!-- Icon -->
+    <div id="sp-icon" style="opacity:0; margin-bottom: 22px;">
+      <img src="./icon.svg" alt="ExitSA" style="width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.28); display: block;" />
+    </div>
+
+    <!-- Title -->
+    <div id="sp-title" style="opacity:0; margin-bottom: 8px;">
+      <div style="font-size: 3.2rem; font-weight: 900; color: #FFF8F0; letter-spacing: -2px; line-height: 1;">ExitSA</div>
+    </div>
+
+    <!-- Tagline -->
+    <div id="sp-tagline" style="opacity:0; margin-bottom: 48px;">
+      <div style="font-size: 1rem; color: #FAE8D3; font-weight: 400; line-height: 1.65;">Know your route before you drive.<br/>No more missed off-ramps.</div>
+    </div>
+
+    <!-- Loading dots -->
+    <div id="sp-dots" style="opacity:0; display: flex; gap: 10px; align-items: center;">
+      <span id="sp-d1" style="width:9px;height:9px;background:rgba(255,248,240,0.35);border-radius:50%;display:inline-block;"></span>
+      <span id="sp-d2" style="width:9px;height:9px;background:rgba(255,248,240,0.35);border-radius:50%;display:inline-block;"></span>
+      <span id="sp-d3" style="width:9px;height:9px;background:rgba(255,248,240,0.35);border-radius:50%;display:inline-block;"></span>
+    </div>
+
+    <!-- Version -->
+    <div id="sp-version" style="opacity:0; position: absolute; bottom: 28px; left: 0; right: 0; text-align: center;">
+      <span style="font-size: 11px; color: rgba(255,248,240,0.45); font-weight: 500; letter-spacing: 0.5px;">v1.0 &nbsp;&middot;&nbsp; South Africa</span>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════ -->
   <!-- SCREEN: HOME                            -->
   <!-- ═══════════════════════════════════════ -->
   <div id="s-home" style="min-height: 100vh; background-color: #FFF8F0;">
@@ -3356,6 +3396,85 @@
   }
 
   // ─────────────────────────────────────────
+  // SPLASH SCREEN
+  // ─────────────────────────────────────────
+
+  function runSplash(onComplete) {
+    var splash  = document.getElementById('s-splash');
+    var icon    = document.getElementById('sp-icon');
+    var title   = document.getElementById('sp-title');
+    var tagline = document.getElementById('sp-tagline');
+    var dots    = document.getElementById('sp-dots');
+    var version = document.getElementById('sp-version');
+    if (!splash) { if (onComplete) onComplete(); return; }
+
+    // Easing: ease-out cubic
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    // Animate opacity (+ optional scale) from current value to target
+    function animateIn(el, duration, delay, fromScale, toScale) {
+      if (!el) return;
+      el.style.opacity = '0';
+      setTimeout(function() {
+        var start = performance.now();
+        function step(now) {
+          var t    = Math.min((now - start) / duration, 1);
+          var ease = easeOut(t);
+          el.style.opacity = ease;
+          if (fromScale !== undefined) {
+            el.style.transform = 'scale(' + (fromScale + (toScale - fromScale) * ease) + ')';
+          }
+          if (t < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }, delay);
+    }
+
+    function animateOut(el, duration, onDone) {
+      var start = performance.now();
+      function step(now) {
+        var t = Math.min((now - start) / duration, 1);
+        el.style.opacity = 1 - t;
+        if (t < 1) requestAnimationFrame(step);
+        else if (onDone) onDone();
+      }
+      requestAnimationFrame(step);
+    }
+
+    // Staggered entrance
+    animateIn(icon,    500, 80,  0.75, 1.0);
+    animateIn(title,   420, 320, 0.90, 1.0);
+    animateIn(tagline, 380, 560, 0.92, 1.0);
+    animateIn(dots,    300, 800);
+    animateIn(version, 400, 900);
+
+    // Dot chase animation
+    var dotPhase = 0;
+    var dotTimer = setInterval(function() {
+      var d = [
+        document.getElementById('sp-d1'),
+        document.getElementById('sp-d2'),
+        document.getElementById('sp-d3')
+      ];
+      d.forEach(function(el, i) {
+        if (!el) return;
+        el.style.background   = i === dotPhase % 3 ? 'rgba(255,248,240,0.95)' : 'rgba(255,248,240,0.3)';
+        el.style.transform    = i === dotPhase % 3 ? 'scale(1.35)'            : 'scale(1)';
+      });
+      dotPhase++;
+    }, 380);
+
+    // Fade out the whole splash after 2.2 s
+    setTimeout(function() {
+      clearInterval(dotTimer);
+      animateOut(splash, 420, function() {
+        splash.style.display = 'none';
+        if (onComplete) onComplete();
+      });
+    }, 2200);
+  }
+
+  // ─────────────────────────────────────────
   // INIT
   // ─────────────────────────────────────────
 
@@ -3364,11 +3483,14 @@
   updateOfflineBanner();
   checkAPKAvailability();
 
+  // Show splash on top — home screen is already rendered underneath
+  runSplash();
+
   // Handle shortcut URLs (from manifest shortcuts)
   (function() {
     var params = new URLSearchParams(window.location.search);
     var routeId = params.get('route');
-    if (routeId && ROUTES[routeId]) loadRoute(routeId);
+    if (routeId && ROUTES[routeId]) setTimeout(function() { loadRoute(routeId); }, 2700);
   })();
 
   </script>
