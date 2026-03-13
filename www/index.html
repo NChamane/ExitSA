@@ -138,6 +138,36 @@
         <div style="flex: 1; height: 1px; background-color: #FAE8D3;"></div>
       </div>
 
+      <!-- Live URL card -->
+      <div style="background-color: #FF6B35; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; text-align: center;">
+        <div style="font-size: 11px; font-weight: 700; color: #FAE8D3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Live web app</div>
+        <a
+          href="https://nchamane.github.io/ExitSA/"
+          target="_blank"
+          rel="noopener"
+          style="font-size: 15px; font-weight: 800; color: #FFF8F0; text-decoration: none; word-break: break-all; display: block; margin-bottom: 10px; line-height: 1.4;"
+        >
+          nchamane.github.io/ExitSA
+        </a>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+          <a
+            href="https://nchamane.github.io/ExitSA/"
+            target="_blank"
+            rel="noopener"
+            style="background-color: #FFF8F0; color: #C1440E; border: none; border-radius: 7px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block;"
+          >
+            &#127760; Open in browser
+          </a>
+          <button
+            onclick="copyURL()"
+            id="copy-url-btn"
+            style="background-color: rgba(255,248,240,0.2); color: #FFF8F0; border: 2px solid rgba(255,248,240,0.5); border-radius: 7px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;"
+          >
+            &#128203; Copy link
+          </button>
+        </div>
+      </div>
+
       <!-- Android APK download -->
       <div style="background-color: #FAE8D3; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; border: 2px solid #F7931E;">
         <div style="display: flex; align-items: center; gap: 14px;">
@@ -3275,6 +3305,34 @@
   function hideIOSGuide() {
     document.getElementById('ios-guide-modal').style.display = 'none';
     document.body.style.overflow = '';
+  }
+
+  // ─────────────────────────────────────────
+  // COPY URL
+  // ─────────────────────────────────────────
+
+  function copyURL() {
+    var url = 'https://nchamane.github.io/ExitSA/';
+    var btn = document.getElementById('copy-url-btn');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() {
+        if (btn) { btn.textContent = '\u2713 Copied!'; setTimeout(function() { btn.textContent = '\uD83D\uDCCB Copy link'; }, 2000); }
+      }).catch(function() { fallbackCopy(url, btn); });
+    } else {
+      fallbackCopy(url, btn);
+    }
+  }
+
+  function fallbackCopy(url, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.opacity  = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); if (btn) { btn.textContent = '\u2713 Copied!'; setTimeout(function() { btn.textContent = '\uD83D\uDCCB Copy link'; }, 2000); } }
+    catch(e) { if (btn) btn.textContent = url; }
+    document.body.removeChild(ta);
   }
 
   // ─────────────────────────────────────────
