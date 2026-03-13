@@ -11,6 +11,8 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create GitHub Releases
 
     steps:
       # ── Checkout ──────────────────────────────────────────────────────────

@@ -129,6 +129,125 @@
       </div>
     </div>
 
+    <!-- ── GET THE APP section ─────────────────────────────────────────── -->
+    <div style="padding: 0 20px 8px; max-width: 480px; margin: 0 auto; box-sizing: border-box;">
+
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="flex: 1; height: 1px; background-color: #FAE8D3;"></div>
+        <span style="font-size: 12px; color: #A0522D; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Get the app</span>
+        <div style="flex: 1; height: 1px; background-color: #FAE8D3;"></div>
+      </div>
+
+      <!-- Android APK download -->
+      <div style="background-color: #FAE8D3; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; border: 2px solid #F7931E;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 2.4rem; flex-shrink: 0; line-height: 1;">&#129475;</div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 15px; font-weight: 800; color: #3D1A00; margin-bottom: 3px;">Android</div>
+            <div style="font-size: 12px; color: #A0522D; margin-bottom: 12px; line-height: 1.4;">Download and install the APK directly — no Play Store needed.</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a
+                id="apk-download-btn"
+                href="./downloads/ExitSA.apk"
+                download="ExitSA.apk"
+                style="background-color: #FF6B35; color: #FFF8F0; border: none; border-radius: 7px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block;"
+                onclick="trackAPKDownload(event)"
+              >
+                &#11015; Download APK
+              </a>
+              <a
+                href="https://github.com/NChamane/ExitSA/releases/latest"
+                target="_blank"
+                rel="noopener"
+                style="background-color: #FAE8D3; color: #C1440E; border: 2px solid #C1440E; border-radius: 7px; padding: 10px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block;"
+              >
+                GitHub Releases
+              </a>
+            </div>
+          </div>
+        </div>
+        <div id="apk-status" style="margin-top: 10px; font-size: 12px; color: #A0522D; line-height: 1.5; display: none;"></div>
+      </div>
+
+      <!-- iOS instructions -->
+      <div style="background-color: #FAE8D3; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; border: 2px solid #F7931E;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 2.4rem; flex-shrink: 0; line-height: 1;">&#63743;</div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 15px; font-weight: 800; color: #3D1A00; margin-bottom: 3px;">iPhone &amp; iPad</div>
+            <div style="font-size: 12px; color: #A0522D; margin-bottom: 12px; line-height: 1.4;">Add ExitSA to your Home Screen for a full-screen, offline experience — no App Store needed.</div>
+            <button
+              onclick="showIOSGuide()"
+              style="background-color: #3D1A00; color: #FFF8F0; border: none; border-radius: 7px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;"
+            >
+              How to install on iPhone
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- iOS install guide modal -->
+    <div id="ios-guide-modal" style="display: none; position: fixed; inset: 0; background: rgba(42,14,0,0.88); z-index: 500; overflow-y: auto;">
+      <div style="max-width: 480px; margin: 0 auto; padding: 24px 20px 48px; box-sizing: border-box;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.3rem; font-weight: 900; color: #FFF8F0; margin: 0;">&#63743; Install on iPhone</h2>
+          <button onclick="hideIOSGuide()" style="background: #C1440E; border: none; color: #FFF8F0; padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;">Done</button>
+        </div>
+
+        <!-- Steps -->
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+
+          <div style="background: #3D1A00; border-radius: 10px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; background: #FF6B35; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #FFF8F0; flex-shrink: 0;">1</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0; margin-bottom: 4px;">Open in Safari</div>
+              <div style="font-size: 13px; color: #FAE8D3; line-height: 1.5;">ExitSA must be opened in <strong>Safari</strong> — not Chrome or any other browser — for the install option to appear.</div>
+            </div>
+          </div>
+
+          <div style="background: #3D1A00; border-radius: 10px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; background: #FF6B35; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #FFF8F0; flex-shrink: 0;">2</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0; margin-bottom: 4px;">Tap the Share button</div>
+              <div style="font-size: 13px; color: #FAE8D3; line-height: 1.5;">At the bottom of Safari, tap the Share icon (the box with an arrow pointing up &#11014;&#65039;).</div>
+            </div>
+          </div>
+
+          <div style="background: #3D1A00; border-radius: 10px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; background: #FF6B35; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #FFF8F0; flex-shrink: 0;">3</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0; margin-bottom: 4px;">Tap "Add to Home Screen"</div>
+              <div style="font-size: 13px; color: #FAE8D3; line-height: 1.5;">Scroll down the Share sheet and tap <strong>Add to Home Screen</strong>. Change the name if you want, then tap <strong>Add</strong>.</div>
+            </div>
+          </div>
+
+          <div style="background: #3D1A00; border-radius: 10px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; background: #FF6B35; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #FFF8F0; flex-shrink: 0;">4</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #FFF8F0; margin-bottom: 4px;">Open from your home screen</div>
+              <div style="font-size: 13px; color: #FAE8D3; line-height: 1.5;">ExitSA now opens full-screen with no browser bar. It works offline, remembers your community tips, and supports GPS warnings in background.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Requirements note -->
+        <div style="background: rgba(255,107,53,0.15); border-radius: 10px; padding: 14px 16px; border: 1px solid rgba(255,107,53,0.3);">
+          <div style="font-size: 12px; font-weight: 700; color: #F7931E; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Requirements</div>
+          <div style="font-size: 13px; color: #FAE8D3; line-height: 1.6;">
+            &#10003; iOS 16.4 or later<br/>
+            &#10003; Safari browser<br/>
+            &#10003; Works on iPhone &amp; iPad<br/>
+            &#10003; No App Store account needed
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <p style="font-size: 13px; color: #A0522D; text-align: center; margin: 0 0 32px; line-height: 1.6; padding: 0 20px;">
       Built by South African drivers, for South African drivers.<br/>
       More routes added regularly.
@@ -3111,12 +3230,82 @@
   }
 
   // ─────────────────────────────────────────
+  // APK DOWNLOAD + iOS GUIDE
+  // ─────────────────────────────────────────
+
+  // Check whether the APK has been built and is available to download.
+  // Shows status messaging below the button accordingly.
+  function checkAPKAvailability() {
+    var btn    = document.getElementById('apk-download-btn');
+    var status = document.getElementById('apk-status');
+    if (!btn || !status) return;
+
+    fetch('./downloads/ExitSA.apk', { method: 'HEAD' })
+      .then(function(res) {
+        if (res.ok) {
+          // APK exists — get file size from Content-Length if available
+          var size = res.headers.get('Content-Length');
+          var sizeStr = size ? ' (' + (parseInt(size) / 1048576).toFixed(1) + ' MB)' : '';
+          status.textContent = '\u2713 APK ready' + sizeStr + ' \u2014 tap to download and install on any Android 7+ device.';
+          status.style.color  = '#FF6B35';
+          status.style.display = 'block';
+        } else {
+          showAPKBuildNote(status, btn);
+        }
+      })
+      .catch(function() {
+        showAPKBuildNote(status, btn);
+      });
+  }
+
+  function showAPKBuildNote(status, btn) {
+    status.innerHTML =
+      '\u26A0\uFE0F APK hasn\u2019t been built yet. To generate it:<br/>' +
+      '&nbsp;&nbsp;1. Push this project to GitHub<br/>' +
+      '&nbsp;&nbsp;2. GitHub Actions builds the APK automatically<br/>' +
+      '&nbsp;&nbsp;3. Download from the <strong>GitHub Releases</strong> button above<br/>' +
+      '<span style="margin-top:6px; display:block;">Or run <code style="background:rgba(0,0,0,0.08); padding:1px 5px; border-radius:3px;">./build-apk.sh</code> locally if you have Android SDK + Java.</span>';
+    status.style.color   = '#A0522D';
+    status.style.display = 'block';
+    // Make download button secondary while APK isn't ready
+    btn.style.backgroundColor = '#FAE8D3';
+    btn.style.color           = '#C1440E';
+    btn.style.border          = '2px solid #C1440E';
+  }
+
+  function trackAPKDownload(e) {
+    var status = document.getElementById('apk-status');
+    if (status && status.style.color !== 'rgb(255, 107, 53)') {
+      // APK not confirmed present — prevent default and show note
+      e.preventDefault();
+      checkAPKAvailability();
+      return;
+    }
+    // APK confirmed — let the download proceed
+    if (status) {
+      status.textContent = '\u2193 Downloading\u2026 Open the file on your phone to install.';
+    }
+  }
+
+  // iOS install guide modal
+  function showIOSGuide() {
+    document.getElementById('ios-guide-modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideIOSGuide() {
+    document.getElementById('ios-guide-modal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // ─────────────────────────────────────────
   // INIT
   // ─────────────────────────────────────────
 
   showScreen('home');
   renderRouteCards();
   updateOfflineBanner();
+  checkAPKAvailability();
 
   // Handle shortcut URLs (from manifest shortcuts)
   (function() {
