@@ -148,10 +148,9 @@
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <a
                 id="apk-download-btn"
-                href="./downloads/ExitSA.apk"
+                href="https://github.com/NChamane/ExitSA/releases/latest/download/ExitSA.apk"
                 download="ExitSA.apk"
                 style="background-color: #FF6B35; color: #FFF8F0; border: none; border-radius: 7px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block;"
-                onclick="trackAPKDownload(event)"
               >
                 &#11015; Download APK
               </a>
@@ -3236,55 +3235,35 @@
   // Check whether the APK has been built and is available to download.
   // Shows status messaging below the button accordingly.
   function checkAPKAvailability() {
-    var btn    = document.getElementById('apk-download-btn');
     var status = document.getElementById('apk-status');
-    if (!btn || !status) return;
+    if (!status) return;
 
-    fetch('./downloads/ExitSA.apk', { method: 'HEAD' })
-      .then(function(res) {
-        if (res.ok) {
-          // APK exists — get file size from Content-Length if available
-          var size = res.headers.get('Content-Length');
-          var sizeStr = size ? ' (' + (parseInt(size) / 1048576).toFixed(1) + ' MB)' : '';
-          status.textContent = '\u2713 APK ready' + sizeStr + ' \u2014 tap to download and install on any Android 7+ device.';
-          status.style.color  = '#FF6B35';
-          status.style.display = 'block';
-        } else {
-          showAPKBuildNote(status, btn);
-        }
-      })
-      .catch(function() {
-        showAPKBuildNote(status, btn);
-      });
-  }
-
-  function showAPKBuildNote(status, btn) {
-    status.innerHTML =
-      '\u26A0\uFE0F APK hasn\u2019t been built yet. To generate it:<br/>' +
-      '&nbsp;&nbsp;1. Push this project to GitHub<br/>' +
-      '&nbsp;&nbsp;2. GitHub Actions builds the APK automatically<br/>' +
-      '&nbsp;&nbsp;3. Download from the <strong>GitHub Releases</strong> button above<br/>' +
-      '<span style="margin-top:6px; display:block;">Or run <code style="background:rgba(0,0,0,0.08); padding:1px 5px; border-radius:3px;">./build-apk.sh</code> locally if you have Android SDK + Java.</span>';
-    status.style.color   = '#A0522D';
-    status.style.display = 'block';
-    // Make download button secondary while APK isn't ready
-    btn.style.backgroundColor = '#FAE8D3';
-    btn.style.color           = '#C1440E';
-    btn.style.border          = '2px solid #C1440E';
-  }
-
-  function trackAPKDownload(e) {
-    var status = document.getElementById('apk-status');
-    if (status && status.style.color !== 'rgb(255, 107, 53)') {
-      // APK not confirmed present — prevent default and show note
-      e.preventDefault();
-      checkAPKAvailability();
-      return;
-    }
-    // APK confirmed — let the download proceed
-    if (status) {
-      status.textContent = '\u2193 Downloading\u2026 Open the file on your phone to install.';
-    }
+    // Check GitHub Releases API for the latest release asset
+    fetch('https://api.github.com/repos/NChamane/ExitSA/releases/latest', {
+      headers: { 'Accept': 'application/vnd.github+json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var apk = (data.assets || []).find(function(a) { return a.name === 'ExitSA.apk'; });
+      if (apk) {
+        var sizeMB = (apk.size / 1048576).toFixed(1);
+        status.innerHTML =
+          '\u2713 <strong>ExitSA.apk ' + sizeMB + ' MB</strong> ready \u2014 ' +
+          data.tag_name + ' \u00B7 tap to download and install on any Android 7+ device.';
+        status.style.color   = '#FF6B35';
+        status.style.display = 'block';
+      } else {
+        status.textContent   = 'No release found yet. Check back after the first GitHub Actions build completes.';
+        status.style.color   = '#A0522D';
+        status.style.display = 'block';
+      }
+    })
+    .catch(function() {
+      // Offline or rate-limited — show static note
+      status.textContent   = '\u2713 APK available at GitHub Releases \u2014 tap Download APK above.';
+      status.style.color   = '#FF6B35';
+      status.style.display = 'block';
+    });
   }
 
   // iOS install guide modal
